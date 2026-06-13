@@ -1,5 +1,12 @@
 "use client";
 
+import { motion } from "framer-motion";
+import { 
+  Globe, FileText, Search, Cpu, Award, 
+  CheckCircle2, AlertTriangle, TrendingUp, Zap, 
+  Settings, Compass, HelpCircle, LucideIcon 
+} from "lucide-react";
+
 type SectionVariant = "default" | "success" | "warning" | "danger";
 
 interface SectionBlockProps {
@@ -11,39 +18,66 @@ interface SectionBlockProps {
 
 const variantClasses: Record<SectionVariant, { border: string; dot: string; title: string }> = {
   default: {
-    border: "border-l-4 border-indigo-500",
-    dot: "bg-indigo-500",
+    border: "border-l-4 border-indigo-500 dark:border-indigo-500/80 hover:border-indigo-600 dark:hover:border-indigo-400",
+    dot: "bg-indigo-500 dark:bg-indigo-500",
     title: "text-indigo-600 dark:text-indigo-400",
   },
   success: {
-    border: "border-l-4 border-emerald-500",
-    dot: "bg-emerald-500",
-    title: "text-emerald-600 dark:text-emerald-400",
+    border: "border-l-4 border-emerald-500 dark:border-emerald-500/80 hover:border-emerald-600 dark:hover:border-emerald-400",
+    dot: "bg-emerald-500 dark:bg-emerald-500",
+    title: "text-emerald-700 dark:text-emerald-400",
   },
   warning: {
-    border: "border-l-4 border-amber-500",
-    dot: "bg-amber-500",
-    title: "text-amber-600 dark:text-amber-400",
+    border: "border-l-4 border-amber-500 dark:border-amber-500/80 hover:border-amber-600 dark:hover:border-amber-400",
+    dot: "bg-amber-500 dark:bg-amber-500",
+    title: "text-amber-700 dark:text-amber-400",
   },
   danger: {
-    border: "border-l-4 border-red-500",
-    dot: "bg-red-500",
+    border: "border-l-4 border-red-500 dark:border-red-500/80 hover:border-red-600 dark:hover:border-red-400",
+    dot: "bg-red-500 dark:bg-red-500",
     title: "text-red-600 dark:text-red-400",
   },
 };
 
+function getIconForTitle(title: string): LucideIcon {
+  const t = title.toLowerCase();
+  if (t.includes("domain")) return Globe;
+  if (t.includes("summary")) return FileText;
+  if (t.includes("problem")) return Search;
+  if (t.includes("methodology")) return Cpu;
+  if (t.includes("contributions")) return Award;
+  if (t.includes("strengths")) return CheckCircle2;
+  if (t.includes("weaknesses")) return AlertTriangle;
+  if (t.includes("gaps")) return TrendingUp;
+  if (t.includes("novelty")) return Zap;
+  if (t.includes("improvements")) return Settings;
+  if (t.includes("future")) return Compass;
+  if (t.includes("questions") || t.includes("viva")) return HelpCircle;
+  return FileText;
+}
+
 export function SectionBlock({ title, content, items, variant = "default" }: SectionBlockProps): JSX.Element {
   const styles = variantClasses[variant];
+  const Icon = getIconForTitle(title);
 
   return (
-    <div className={`rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 dark:border-gray-800/60 dark:bg-gray-900/10 hover:shadow-md ${styles.border}`}>
-      <h3 className={`text-sm font-semibold tracking-wide uppercase ${styles.title}`}>
-        {title}
-      </h3>
+    <motion.div
+      whileHover={{ y: -4, scale: 1.005 }}
+      transition={{ type: "spring", stiffness: 300, damping: 20 }}
+      className={`rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/20 p-6 shadow-sm dark:shadow-xl backdrop-blur-xl transition-all duration-300 hover:shadow-md dark:hover:shadow-indigo-500/5 hover:border-slate-300 dark:hover:border-white/15 ${styles.border}`}
+    >
+      <div className="flex items-center gap-3">
+        <div className={`flex h-7 w-7 items-center justify-center rounded-lg bg-slate-50 dark:bg-slate-900 border border-slate-100 dark:border-white/5 ${styles.title}`}>
+          <Icon className="h-4 w-4" />
+        </div>
+        <h3 className={`text-sm font-bold tracking-wide uppercase ${styles.title}`}>
+          {title}
+        </h3>
+      </div>
 
       <div className="mt-4 min-w-0">
         {content ? (
-          <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+          <p className="text-sm leading-relaxed text-slate-650 dark:text-slate-300">
             {content}
           </p>
         ) : null}
@@ -52,8 +86,8 @@ export function SectionBlock({ title, content, items, variant = "default" }: Sec
           <ul className="space-y-3">
             {items.map((item, index) => (
               <li
-                key={`${item}-${index}`}
-                className="flex items-start gap-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
+                 key={`${item}-${index}`}
+                 className="flex items-start gap-3 text-sm leading-relaxed text-slate-650 dark:text-slate-300"
               >
                 {/* Custom dot icon indicator */}
                 <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${styles.dot}`} />
@@ -63,6 +97,6 @@ export function SectionBlock({ title, content, items, variant = "default" }: Sec
           </ul>
         ) : null}
       </div>
-    </div>
+    </motion.div>
   );
 }

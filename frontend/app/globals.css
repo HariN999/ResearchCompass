@@ -3,23 +3,24 @@
 @tailwind utilities;
 
 :root {
-  --background: #ffffff;
-  --surface: #f9fafb;
-  --border: #e5e7eb;
-  --text-primary: #111111;
-  --text-secondary: #6b7280;
-  --text-muted: #9ca3af;
-  --accent: #6366f1;
+  --background: #f8fafc; /* slate-50 */
+  --surface: #ffffff;    /* elevated white */
+  --border: #e2e8f0;     /* slate-200 */
+  --text-primary: #0f172a; /* slate-900 */
+  --text-secondary: #475569; /* slate-600 */
+  --text-muted: #94a3b8;   /* slate-400 */
+  --accent: #4f46e5;     /* indigo-600 */
 }
 
+/* Premium Dark theme variables */
 .dark {
-  --background: #030712;
-  --surface: #111827;
-  --border: #1f2937;
-  --text-primary: #ffffff;
-  --text-secondary: #9ca3af;
-  --text-muted: #6b7280;
-  --accent: #6366f1;
+  --background: #020617; /* slate-950 */
+  --surface: #0b0f19;    /* deep dark slate */
+  --border: #1e293b;     /* slate-800 */
+  --text-primary: #f8fafc; /* slate-50 */
+  --text-secondary: #94a3b8; /* slate-400 */
+  --text-muted: #64748b;   /* slate-500 */
+  --accent: #6366f1;     /* indigo-500 */
 }
 
 @layer base {
@@ -32,6 +33,8 @@
     background: var(--background);
     color: var(--text-primary);
     font-size: 14px;
+    font-family: var(--font-geist-sans), sans-serif;
+    transition: background-color 0.15s ease, color 0.15s ease;
   }
 
   ::selection {
@@ -40,39 +43,39 @@
 
   * {
     scrollbar-width: thin;
-    scrollbar-color: theme("colors.gray.400") theme("colors.gray.100");
+    scrollbar-color: theme("colors.slate.200") theme("colors.slate.100");
   }
 
   .dark * {
-    scrollbar-color: theme("colors.gray.700") theme("colors.gray.900");
+    scrollbar-color: theme("colors.slate.800") theme("colors.slate.950");
   }
 
   *::-webkit-scrollbar {
-    @apply h-1 w-1;
+    @apply h-1.5 w-1.5;
   }
 
   *::-webkit-scrollbar-track {
-    @apply bg-gray-100 dark:bg-gray-900;
+    @apply bg-slate-100 dark:bg-slate-950;
   }
 
   *::-webkit-scrollbar-thumb {
-    @apply rounded-full bg-gray-400 dark:bg-gray-700;
+    @apply rounded-full bg-slate-300 dark:bg-slate-800 hover:bg-slate-400 dark:hover:bg-slate-700;
   }
 }
 
-@keyframes fadeIn {
-  from {
-    opacity: 0;
-    transform: translateY(6px);
-  }
-  to {
-    opacity: 1;
-    transform: translateY(0);
-  }
+/* Premium Indigo grid overlay (soft in light, glowing in dark) */
+.bg-grid-pattern {
+  background-size: 28px 28px;
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.025) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.025) 1px, transparent 1px);
+  mask-image: radial-gradient(ellipse at center, black, transparent 80%);
 }
 
-.animate-fadeIn {
-  animation: fadeIn 0.35s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+.dark .bg-grid-pattern {
+  background-image: 
+    linear-gradient(to right, rgba(99, 102, 241, 0.05) 1px, transparent 1px),
+    linear-gradient(to bottom, rgba(99, 102, 241, 0.05) 1px, transparent 1px);
 }
 
 .no-scrollbar::-webkit-scrollbar {
