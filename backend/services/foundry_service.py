@@ -11,6 +11,13 @@ You are a senior AI research reviewer with deep expertise in computer science, N
 
 Given the full text of a research paper, perform a complete analysis.
 
+Publication readiness score must be an integer between 0 and 100. Follow this guidance:
+- 0 = unsuitable for publication
+- 50 = average workshop-quality work
+- 70 = solid conference-quality work
+- 90 = strong publication-ready work
+- 100 = exceptional publication-ready work
+
 Return ONLY valid JSON.
 
 {
@@ -26,7 +33,7 @@ Return ONLY valid JSON.
   "implementation_improvements": ["string"],
   "future_work": ["string"],
   "viva_questions": ["string", "string", "string", "string", "string"],
-  "publication_readiness_score": 0,
+  "publication_readiness_score": 70,
   "publication_readiness_justification": "string"
 }
 """
@@ -147,16 +154,26 @@ def coerce_to_string(val) -> str:
 def coerce_to_int(val) -> int:
     if val is None:
         return 0
+    
+    score = 0
     if isinstance(val, (int, float)):
-        return int(val)
-    try:
-        # Extract the first digit sequence
-        match = re.search(r'\d+', str(val))
-        if match:
-            return int(match.group())
-        return int(float(str(val).strip()))
-    except (ValueError, TypeError):
-        return 0
+        score = int(val)
+    else:
+        try:
+            # Extract the first digit sequence
+            match = re.search(r'\d+', str(val))
+            if match:
+                score = int(match.group())
+            else:
+                score = int(float(str(val).strip()))
+        except (ValueError, TypeError):
+            score = 0
+
+    # Defensive normalization: auto-scale 1-10 scores to 10-100 percentages
+    if 0 < score <= 10:
+        score = score * 10
+        
+    return score
 
 
 def coerce_and_validate_analysis_response(parsed_dict: dict) -> dict:
