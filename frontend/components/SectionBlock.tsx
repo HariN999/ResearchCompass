@@ -1,3 +1,5 @@
+"use client";
+
 type SectionVariant = "default" | "success" | "warning" | "danger";
 
 interface SectionBlockProps {
@@ -7,36 +9,60 @@ interface SectionBlockProps {
   variant?: SectionVariant;
 }
 
-const accentClasses: Record<SectionVariant, string> = {
-  default: "border-indigo-500",
-  success: "border-emerald-500",
-  warning: "border-amber-500",
-  danger: "border-red-500",
+const variantClasses: Record<SectionVariant, { border: string; dot: string; title: string }> = {
+  default: {
+    border: "border-l-4 border-indigo-500",
+    dot: "bg-indigo-500",
+    title: "text-indigo-600 dark:text-indigo-400",
+  },
+  success: {
+    border: "border-l-4 border-emerald-500",
+    dot: "bg-emerald-500",
+    title: "text-emerald-600 dark:text-emerald-400",
+  },
+  warning: {
+    border: "border-l-4 border-amber-500",
+    dot: "bg-amber-500",
+    title: "text-amber-600 dark:text-amber-400",
+  },
+  danger: {
+    border: "border-l-4 border-red-500",
+    dot: "bg-red-500",
+    title: "text-red-600 dark:text-red-400",
+  },
 };
 
 export function SectionBlock({ title, content, items, variant = "default" }: SectionBlockProps): JSX.Element {
+  const styles = variantClasses[variant];
+
   return (
-    <section className="border-t border-gray-200 py-7 dark:border-gray-800 md:grid md:grid-cols-[220px_1fr] md:gap-8">
-      <div className={`mb-4 border-l-2 pl-3 md:mb-0 ${accentClasses[variant]}`}>
-        <h2 className="text-sm font-medium text-gray-900 dark:text-white">{title}</h2>
-      </div>
+    <div className={`rounded-xl border border-gray-100 bg-white p-6 shadow-sm transition-all duration-300 dark:border-gray-800/60 dark:bg-gray-900/10 hover:shadow-md ${styles.border}`}>
+      <h3 className={`text-sm font-semibold tracking-wide uppercase ${styles.title}`}>
+        {title}
+      </h3>
 
-      <div className="min-w-0">
-        {content ? <p className="text-sm leading-7 text-gray-500 dark:text-gray-400">{content}</p> : null}
+      <div className="mt-4 min-w-0">
+        {content ? (
+          <p className="text-sm leading-relaxed text-gray-600 dark:text-gray-300">
+            {content}
+          </p>
+        ) : null}
 
-        {items ? (
+        {items && items.length > 0 ? (
           <ul className="space-y-3">
-            {items.map((item) => (
+            {items.map((item, index) => (
               <li
-                key={item}
-                className="border-l border-gray-200 pl-4 text-sm leading-7 text-gray-500 transition-all duration-150 hover:border-indigo-500 hover:text-gray-900 dark:border-gray-800 dark:text-gray-400 dark:hover:border-indigo-500 dark:hover:text-gray-200"
+                key={`${item}-${index}`}
+                className="flex items-start gap-3 text-sm leading-relaxed text-gray-600 dark:text-gray-300"
               >
-                {item}
+                {/* Custom dot icon indicator */}
+                <span className={`mt-2 h-1.5 w-1.5 shrink-0 rounded-full ${styles.dot}`} />
+                <span>{item}</span>
               </li>
             ))}
           </ul>
         ) : null}
       </div>
-    </section>
+    </div>
   );
 }
