@@ -44,9 +44,11 @@ export default function Home(): JSX.Element {
 
   return (
     <main className="min-h-screen bg-white text-gray-900 transition-all duration-150 dark:bg-gray-950 dark:text-white">
+      {/* Navigation */}
       <nav className="border-b border-gray-200 bg-white transition-all duration-150 dark:border-gray-800 dark:bg-gray-950">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <div className="text-sm font-semibold tracking-tight text-gray-900 dark:text-white">
+          <div className="text-sm font-semibold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
             ResearchCompass
           </div>
 
@@ -79,40 +81,124 @@ export default function Home(): JSX.Element {
             </button>
 
             <span className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
-              v1.0
+              v1.1
             </span>
           </div>
         </div>
       </nav>
 
-      <div className="mx-auto max-w-6xl px-6">
-        <section className="mx-auto max-w-2xl py-20 text-center">
-          <p className="text-xs font-medium uppercase tracking-widest text-indigo-500 dark:text-indigo-400">
-            Research analysis tool
-          </p>
-          <h1 className="mt-5 text-4xl font-semibold tracking-tight text-gray-900 dark:text-white sm:text-5xl">
-            Find the gaps in your research paper
-          </h1>
-          <p className="mx-auto mt-5 max-w-xl text-base leading-7 text-gray-500 dark:text-gray-400">
-            Upload a PDF and get a structured review of methodology, novelty, research gaps, implementation
-            improvements, and publication readiness.
-          </p>
+      {/* Main Body container */}
+      <div className="mx-auto max-w-6xl px-6 py-6 md:py-12">
+        
+        {/* LANDING HERO VIEW */}
+        {!result && !loading ? (
+          <div className="grid gap-12 md:grid-cols-[1fr_420px] items-center py-10 md:py-16 animate-fadeIn">
+            
+            {/* Left Column: Value Prop */}
+            <div className="text-left space-y-6">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500" />
+                Microsoft Agents League Entry
+              </span>
+              
+              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl leading-[1.15] text-gray-900 dark:text-white">
+                Evaluate Research Gaps & <br />
+                <span className="bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-500">
+                  Accelerate Science
+                </span>
+              </h1>
+              
+              <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400 max-w-xl">
+                ResearchCompass runs your academic papers through a structured six-stage analysis workflow. Powered by <strong>Microsoft Azure AI Foundry (o4-mini)</strong>, it critiques methodology baselines, identifies unaddressed limits, and computes publication readiness.
+              </p>
 
-          <UploadSection onAnalyze={handleAnalyze} loading={loading} />
+              {/* Bullet Features list */}
+              <div className="space-y-3 pt-2">
+                {[
+                  "Domain Classification & Subfield Categorization",
+                  "Deep Methodology & Experimental baseline audits",
+                  "Exposing unaddressed weaknesses and research gaps",
+                  "Generating concrete code and implementation recommendations",
+                  "Ph.D. Thesis committee viva questions",
+                  "Verified publication readiness scorecard"
+                ].map((feat) => (
+                  <div key={feat} className="flex items-center gap-2.5 text-xs text-gray-600 dark:text-gray-400">
+                    <svg className="h-4 w-4 shrink-0 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
 
-          <AgentWorkflow loading={loading} />
-
-          {error ? (
-            <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-left dark:border-red-900 dark:bg-red-950/40">
-              <p className="text-sm leading-6 text-red-600 dark:text-red-300">{error}</p>
+              {/* Integration Badges */}
+              <div className="flex flex-wrap items-center gap-2 pt-4">
+                <span className="inline-flex items-center rounded-md border border-gray-250 bg-gray-50/50 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
+                  Azure AI Foundry Layer
+                </span>
+                <span className="inline-flex items-center rounded-md border border-gray-255 bg-gray-50/50 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
+                  o4-mini deployment
+                </span>
+              </div>
             </div>
-          ) : null}
-        </section>
 
-        {result ? (
-          <section className="mx-auto mb-24 max-w-4xl">
+            {/* Right Column: Upload Card */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md dark:border-gray-800 dark:bg-gray-950/40">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white text-left">
+                Start Review Process
+              </h3>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-left">
+                Select your draft manuscript in PDF format.
+              </p>
+              <UploadSection onAnalyze={handleAnalyze} loading={loading} />
+            </div>
+
+          </div>
+        ) : null}
+
+        {/* LOADING STATE FOCUS VIEW */}
+        {loading && (
+          <div className="max-w-4xl mx-auto py-12 text-center animate-fadeIn">
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              Agent Review In Progress
+            </h2>
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              An agent is actively evaluating your research paper structure...
+            </p>
+            <AgentWorkflow loading={loading} />
+          </div>
+        )}
+
+        {/* ERROR STATE */}
+        {error ? (
+          <div className="max-w-2xl mx-auto mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-left dark:border-red-900 dark:bg-red-950/40">
+            <p className="text-sm leading-6 text-red-600 dark:text-red-350">{error}</p>
+          </div>
+        ) : null}
+
+        {/* RESULTS VIEW */}
+        {result && !loading ? (
+          <div className="animate-fadeIn mt-6 mb-24">
+            {/* Header info */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 mb-8 border-b border-gray-200 dark:border-gray-800">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                  Manuscript Analysis Report
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Comprehensive review outcomes for {analyzedFilename}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setResult(null); setError(null); }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900 dark:border-gray-800 dark:text-gray-450 dark:hover:bg-gray-900 dark:hover:text-white"
+              >
+                ← Analyze Another Paper
+              </button>
+            </div>
             <ResultsDashboard result={result} filename={analyzedFilename} />
-          </section>
+          </div>
         ) : null}
       </div>
     </main>
