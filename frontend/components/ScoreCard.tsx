@@ -20,32 +20,32 @@ interface ColorSet {
 function getScoreColors(score: number): ColorSet {
   if (score >= 70) {
     return {
-      text: "text-emerald-500",
+      text: "text-emerald-600 dark:text-emerald-500",
       stroke: "stroke-emerald-500",
       bg: "bg-emerald-500/10",
-      badge: "bg-emerald-500/10 text-emerald-400 border-emerald-500/20",
-      glow: "shadow-[0_0_30px_rgba(16,185,129,0.12)] border-emerald-500/20",
+      badge: "bg-emerald-50/80 dark:bg-emerald-500/10 text-emerald-700 dark:text-emerald-400 border-emerald-200 dark:border-emerald-500/20",
+      glow: "shadow-[0_4px_20px_rgba(16,185,129,0.05)] dark:shadow-[0_0_30px_rgba(16,185,129,0.12)] border-emerald-500/20 dark:border-emerald-500/20",
       label: "Strong",
     };
   }
 
   if (score >= 40) {
     return {
-      text: "text-amber-500",
+      text: "text-amber-600 dark:text-amber-500",
       stroke: "stroke-amber-500",
       bg: "bg-amber-500/10",
-      badge: "bg-amber-500/10 text-amber-400 border-amber-500/20",
-      glow: "shadow-[0_0_30px_rgba(245,158,11,0.12)] border-amber-500/20",
+      badge: "bg-amber-50/80 dark:bg-amber-500/10 text-amber-700 dark:text-amber-400 border-amber-200 dark:border-amber-500/20",
+      glow: "shadow-[0_4px_20px_rgba(245,158,11,0.05)] dark:shadow-[0_0_30px_rgba(245,158,11,0.12)] border-amber-500/20 dark:border-amber-500/20",
       label: "Moderate",
     };
   }
 
   return {
-    text: "text-red-500",
+    text: "text-red-600 dark:text-red-500",
     stroke: "stroke-red-500",
     bg: "bg-red-500/10",
-    badge: "bg-red-500/10 text-red-400 border-red-500/20",
-    glow: "shadow-[0_0_30px_rgba(239,68,68,0.12)] border-red-500/20",
+    badge: "bg-red-50/80 dark:bg-red-500/10 text-red-700 dark:text-red-400 border-red-200 dark:border-red-500/20",
+    glow: "shadow-[0_4px_20px_rgba(239,68,68,0.05)] dark:shadow-[0_0_30px_rgba(239,68,68,0.12)] border-red-500/20 dark:border-red-500/20",
     label: "Needs Work",
   };
 }
@@ -87,9 +87,9 @@ export function ScoreCard({ score, justification }: ScoreCardProps): JSX.Element
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: "spring" }}
-      className={`rounded-2xl border bg-slate-900/40 p-6 text-center backdrop-blur-xl transition-all duration-300 ${colors.glow}`}
+      className={`rounded-2xl border bg-white dark:bg-slate-900/40 p-6 text-center backdrop-blur-xl transition-all duration-300 ${colors.glow}`}
     >
-      <h3 className="text-xs font-semibold tracking-wider uppercase text-slate-500">
+      <h3 className="text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-slate-500">
         Publication Readiness
       </h3>
 
@@ -101,7 +101,7 @@ export function ScoreCard({ score, justification }: ScoreCardProps): JSX.Element
             cx="64"
             cy="64"
             r={radius}
-            className="stroke-slate-800 fill-none"
+            className="stroke-slate-100 dark:stroke-slate-800 fill-none"
             strokeWidth="5"
           />
           {/* Active progress circle using motion.circle */}
@@ -128,7 +128,7 @@ export function ScoreCard({ score, justification }: ScoreCardProps): JSX.Element
           >
             {displayScore}
           </motion.span>
-          <span className="text-[9px] font-bold text-slate-500 uppercase tracking-widest">
+          <span className="text-[9px] font-bold text-slate-400 dark:text-slate-500 uppercase tracking-widest">
             Percent
           </span>
         </div>
@@ -142,16 +142,16 @@ export function ScoreCard({ score, justification }: ScoreCardProps): JSX.Element
       </div>
 
       {/* Justification Text Block */}
-      <div className="mt-5 border-t border-slate-800/80 pt-4 text-left">
+      <div className="mt-5 border-t border-slate-200 dark:border-slate-800/80 pt-4 text-left">
         <div className="flex items-center gap-2">
-          <svg className="h-3.5 w-3.5 text-slate-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
+          <svg className="h-3.5 w-3.5 text-slate-450 dark:text-slate-500" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="2.5">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
           </svg>
-          <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider">
+          <h4 className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
             Reviewer Report
           </h4>
         </div>
-        <p className="mt-2.5 text-xs leading-relaxed text-slate-400">
+        <p className="mt-2.5 text-xs leading-relaxed text-slate-650 dark:text-slate-400">
           {justification}
         </p>
       </div>

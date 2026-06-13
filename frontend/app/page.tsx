@@ -60,17 +60,17 @@ export default function Home(): JSX.Element {
   };
 
   return (
-    <main className="relative min-h-screen bg-slate-950 text-slate-100 overflow-hidden">
+    <main className="relative min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 overflow-hidden">
       
       {/* BACKGROUND GRAPHICS: Glow Orbs & Grid */}
       <div className="absolute inset-0 bg-grid-pattern pointer-events-none z-0" />
-      <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/10 blur-[130px] pointer-events-none z-0" />
-      <div className="absolute bottom-[-15%] right-[-10%] h-[600px] w-[600px] rounded-full bg-violet-600/10 blur-[130px] pointer-events-none z-0" />
+      <div className="absolute top-[-10%] left-[-10%] h-[600px] w-[600px] rounded-full bg-indigo-500/5 dark:bg-indigo-500/10 blur-[130px] pointer-events-none z-0" />
+      <div className="absolute bottom-[-15%] right-[-10%] h-[600px] w-[600px] rounded-full bg-violet-600/5 dark:bg-violet-600/10 blur-[130px] pointer-events-none z-0" />
 
       {/* Navigation */}
-      <nav className="relative z-10 border-b border-slate-800/60 bg-slate-950/60 backdrop-blur-md">
+      <nav className="relative z-10 border-b border-slate-200/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
-          <div className="text-sm font-semibold tracking-tight text-white flex items-center gap-2">
+          <div className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
             ResearchCompass
           </div>
@@ -79,7 +79,7 @@ export default function Home(): JSX.Element {
             <button
               type="button"
               onClick={toggleTheme}
-              className="rounded-md p-2 text-slate-400 transition-all duration-150 hover:bg-slate-900 hover:text-white"
+              className="rounded-md p-2 text-slate-550 dark:text-slate-400 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
               {isDark ? (
@@ -103,7 +103,7 @@ export default function Home(): JSX.Element {
               )}
             </button>
 
-            <span className="rounded-md border border-slate-800 bg-slate-900/60 px-2 py-0.5 text-xs text-slate-400">
+            <span className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 px-2 py-0.5 text-xs text-slate-500 dark:text-slate-400">
               v1.2
             </span>
           </div>
@@ -129,25 +129,25 @@ export default function Home(): JSX.Element {
               <div className="text-left space-y-6">
                 <motion.span
                   variants={itemVariants}
-                  className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-400 shadow-[0_0_15px_rgba(99,102,241,0.06)]"
+                  className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 shadow-[0_1px_3px_rgba(99,102,241,0.02)] dark:shadow-[0_0_15px_rgba(99,102,241,0.06)]"
                 >
-                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-400" />
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500 dark:bg-indigo-400" />
                   Microsoft Agents League Entry
                 </motion.span>
                 
                 <motion.h1
                   variants={itemVariants}
-                  className="text-4xl font-extrabold tracking-tight sm:text-5xl leading-[1.15] text-white"
+                  className="text-4xl font-extrabold tracking-tight sm:text-5xl leading-[1.15] text-slate-900 dark:text-white"
                 >
                   Critique Research & <br />
-                  <span className="bg-gradient-to-r from-indigo-400 via-purple-400 to-pink-500 bg-clip-text text-transparent">
+                  <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-500 bg-clip-text text-transparent">
                     Accelerate Discovery
                   </span>
                 </motion.h1>
                 
                 <motion.p
                   variants={itemVariants}
-                  className="text-sm leading-relaxed text-slate-400 max-w-xl"
+                  className="text-sm leading-relaxed text-slate-600 dark:text-slate-400 max-w-xl"
                 >
                   ResearchCompass runs academic manuscripts through a structured six-stage review workflow. Powered by <strong>Microsoft Azure AI Foundry (o4-mini)</strong>, the agent audits methodologies, exposes hidden research gaps, and calculates readiness scoring.
                 </motion.p>
@@ -162,8 +162,8 @@ export default function Home(): JSX.Element {
                     "Ph.D. Thesis committee defense viva questions",
                     "Publication readiness scorecard with detailed justification"
                   ].map((feat) => (
-                    <div key={feat} className="flex items-center gap-3 text-xs text-slate-350">
-                      <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-indigo-500/10 text-indigo-400 border border-indigo-500/20">
+                    <div key={feat} className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
+                      <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
                         <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
                           <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
                         </svg>
@@ -175,10 +175,10 @@ export default function Home(): JSX.Element {
 
                 {/* Integration Badges */}
                 <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 pt-4">
-                  <span className="inline-flex items-center rounded-md border border-slate-800 bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <span className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     Azure AI Foundry Layer
                   </span>
-                  <span className="inline-flex items-center rounded-md border border-slate-800 bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">
+                  <span className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
                     o4-mini deployment
                   </span>
                 </motion.div>
@@ -187,12 +187,12 @@ export default function Home(): JSX.Element {
               {/* Right Column: Upload Card */}
               <motion.div
                 variants={itemVariants}
-                className="rounded-2xl border border-white/10 bg-slate-900/30 p-6 shadow-xl backdrop-blur-xl transition-colors hover:border-indigo-500/30"
+                className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-6 shadow-sm dark:shadow-xl backdrop-blur-xl transition-all hover:border-indigo-500/30"
               >
-                <h3 className="text-sm font-bold text-white text-left">
+                <h3 className="text-sm font-bold text-slate-900 dark:text-white text-left">
                   Start Review Process
                 </h3>
-                <p className="mt-1 text-xs text-slate-450 text-left">
+                <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 text-left">
                   Select your draft manuscript in PDF format.
                 </p>
                 <UploadSection onAnalyze={handleAnalyze} loading={loading} />
@@ -210,10 +210,10 @@ export default function Home(): JSX.Element {
               exit={{ opacity: 0, y: -20 }}
               className="max-w-4xl mx-auto py-8 text-center"
             >
-              <h2 className="text-2xl font-bold tracking-tight text-white">
+              <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
                 Review Agent Executing
               </h2>
-              <p className="mt-1.5 text-xs text-slate-450">
+              <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
                 An active reasoning trace is evaluating your PDF paper structure...
               </p>
               <AgentWorkflow loading={loading} />
@@ -225,9 +225,9 @@ export default function Home(): JSX.Element {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="max-w-2xl mx-auto mt-6 rounded-lg border border-red-500/20 bg-red-950/20 p-4 text-left border-l-4 border-l-red-500"
+              className="max-w-2xl mx-auto mt-6 rounded-lg border border-red-500/25 bg-red-50 dark:bg-red-950/20 p-4 text-left border-l-4 border-l-red-500 text-red-800 dark:text-red-400"
             >
-              <p className="text-sm leading-6 text-red-400">{error}</p>
+              <p className="text-sm leading-6">{error}</p>
             </motion.div>
           ) : null}
 
@@ -240,19 +240,19 @@ export default function Home(): JSX.Element {
               className="mt-6 mb-24"
             >
               {/* Header info */}
-              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 mb-8 border-b border-slate-800/80">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 mb-8 border-b border-slate-200 dark:border-slate-800/80">
                 <div>
-                  <h2 className="text-xl font-bold tracking-tight text-white">
+                  <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
                     Manuscript Analysis Report
                   </h2>
-                  <p className="text-xs text-slate-450 mt-1">
+                  <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
                     Comprehensive review outcomes for {analyzedFilename}
                   </p>
                 </div>
                 <button
                   type="button"
                   onClick={() => { setResult(null); setError(null); }}
-                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-800 bg-slate-900/40 px-3.5 py-1.5 text-xs font-semibold text-slate-300 transition-all duration-150 hover:bg-slate-900 hover:text-white"
+                  className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all duration-150 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
                 >
                   ← Analyze Another Paper
                 </button>

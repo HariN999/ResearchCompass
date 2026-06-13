@@ -69,35 +69,35 @@ export function ResultsDashboard({ result, filename }: ResultsDashboardProps): J
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl border border-white/10 bg-slate-900/30 p-6 shadow-xl backdrop-blur-xl"
+          className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-6 shadow-sm dark:shadow-xl backdrop-blur-xl"
         >
-          <div className="flex items-center gap-2 pb-3 border-b border-slate-800/80">
-            <FileText className="h-3.5 w-3.5 text-indigo-400" />
-            <h4 className="text-xs font-semibold uppercase text-slate-400 tracking-wider">
+          <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800/80">
+            <FileText className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
+            <h4 className="text-xs font-semibold uppercase text-slate-500 dark:text-slate-400 tracking-wider">
               Document details
             </h4>
           </div>
           
-          <div className="mt-4 space-y-3.5 text-xs text-slate-400">
+          <div className="mt-4 space-y-3.5 text-xs text-slate-500 dark:text-slate-400">
             <div className="flex items-center justify-between gap-4">
-              <span className="flex items-center gap-1.5 text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 font-medium">
                 <FileText className="h-3 w-3" /> File
               </span>
-              <span className="truncate font-semibold text-slate-300 max-w-[140px]" title={filename}>
+              <span className="truncate font-semibold text-slate-700 dark:text-slate-300 max-w-[140px]" title={filename}>
                 {filename}
               </span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 font-medium">
                 <Calendar className="h-3 w-3" /> Date
               </span>
-              <span className="font-semibold text-slate-300">{timestamp}</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">{timestamp}</span>
             </div>
             <div className="flex items-center justify-between">
-              <span className="flex items-center gap-1.5 text-slate-500 font-medium">
+              <span className="flex items-center gap-1.5 text-slate-400 dark:text-slate-500 font-medium">
                 <Layers className="h-3 w-3" /> Review
               </span>
-              <span className="font-semibold text-slate-300">13 categories</span>
+              <span className="font-semibold text-slate-700 dark:text-slate-300">13 categories</span>
             </div>
           </div>
         </motion.div>
@@ -107,7 +107,7 @@ export function ResultsDashboard({ result, filename }: ResultsDashboardProps): J
       <div className="flex-1 w-full min-w-0 space-y-6">
         
         {/* Tab Selection Row */}
-        <div className="flex border-b border-slate-850 overflow-x-auto no-scrollbar scroll-smooth">
+        <div className="flex border-b border-slate-200 dark:border-slate-800/80 overflow-x-auto no-scrollbar scroll-smooth">
           {tabs.map((tab) => {
             const isActive = activeTab === tab.id;
             const TabIcon = tab.icon;
@@ -117,8 +117,8 @@ export function ResultsDashboard({ result, filename }: ResultsDashboardProps): J
                 onClick={() => setActiveTab(tab.id)}
                 className={`relative flex items-center gap-2 px-5 py-4 text-xs font-bold whitespace-nowrap uppercase tracking-wider transition-all duration-200 ${
                   isActive
-                    ? "text-indigo-400"
-                    : "text-slate-500 hover:text-slate-300"
+                    ? "text-indigo-600 dark:text-indigo-400"
+                    : "text-slate-500 hover:text-slate-800 dark:text-slate-500 dark:hover:text-slate-300"
                 }`}
               >
                 <TabIcon className="h-3.5 w-3.5" />
@@ -126,7 +126,7 @@ export function ResultsDashboard({ result, filename }: ResultsDashboardProps): J
                 {isActive && (
                   <motion.div
                     layoutId="activeTabUnderline"
-                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+                    className="absolute bottom-0 left-0 right-0 h-0.5 bg-indigo-500 shadow-[0_1px_4px_rgba(99,102,241,0.2)] dark:shadow-[0_0_8px_rgba(99,102,241,0.5)]"
                     transition={{ type: "spring", stiffness: 380, damping: 30 }}
                   />
                 )}

@@ -78,8 +78,8 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
     <div className="mt-10 grid gap-8 md:grid-cols-[300px_1fr] text-left">
       
       {/* Visual Pipeline Checklist with Connecting Line */}
-      <div className="relative rounded-2xl border border-white/10 bg-slate-900/30 p-6 shadow-xl backdrop-blur-md">
-        <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-400">
+      <div className="relative rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-6 shadow-sm dark:shadow-xl backdrop-blur-md">
+        <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
           Agent Reasoning Pipeline
         </h4>
         
@@ -87,11 +87,11 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
         <div className="relative mt-8 space-y-8 pl-8">
           
           {/* Vertical background connection line */}
-          <div className="absolute left-[9px] top-2 bottom-2 w-[2px] bg-slate-800" />
+          <div className="absolute left-[9px] top-2 bottom-2 w-[2px] bg-slate-200 dark:bg-slate-800" />
           
           {/* Vertical animated active line */}
           <motion.div
-            className="absolute left-[9px] top-2 w-[2px] bg-indigo-500 origin-top shadow-[0_0_8px_rgba(99,102,241,0.5)]"
+            className="absolute left-[9px] top-2 w-[2px] bg-indigo-500 origin-top shadow-[0_0_8px_rgba(99,102,241,0.3)] dark:shadow-[0_0_8px_rgba(99,102,241,0.5)]"
             initial={{ height: "0%" }}
             animate={{ height: `${(currentStep / (steps.length - 1)) * 85}%` }}
             transition={{ duration: 0.5, ease: "easeInOut" }}
@@ -107,12 +107,12 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
                 className="relative flex items-center gap-4 transition-all duration-300"
               >
                 {/* Node circle */}
-                <div className="absolute left-[-31px] flex h-5 w-5 items-center justify-center rounded-full bg-slate-950 z-10">
+                <div className="absolute left-[-31px] flex h-5 w-5 items-center justify-center rounded-full bg-white dark:bg-slate-950 z-10">
                   {isCompleted ? (
                     <motion.div
                       initial={{ scale: 0 }}
                       animate={{ scale: 1 }}
-                      className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-500/20 text-emerald-400 border border-emerald-500/30 shadow-[0_0_10px_rgba(16,185,129,0.2)]"
+                      className="flex h-5 w-5 items-center justify-center rounded-full bg-emerald-50 dark:bg-emerald-500/20 text-emerald-600 dark:text-emerald-400 border border-emerald-200 dark:border-emerald-500/30 shadow-[0_1px_3px_rgba(16,185,129,0.1)] dark:shadow-[0_0_10px_rgba(16,185,129,0.2)]"
                     >
                       <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={4}>
                         <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
@@ -121,22 +121,22 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
                   ) : isActive ? (
                     <div className="relative flex h-5 w-5 items-center justify-center">
                       <span className="absolute inline-flex h-full w-full animate-ping rounded-full bg-indigo-500/30 opacity-75"></span>
-                      <div className="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-indigo-500/20 border border-indigo-400 shadow-[0_0_10px_rgba(99,102,241,0.4)]">
-                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-400" />
+                      <div className="relative flex h-3.5 w-3.5 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/20 border border-indigo-450 dark:border-indigo-400 shadow-[0_1px_3px_rgba(99,102,241,0.2)] dark:shadow-[0_0_10px_rgba(99,102,241,0.4)]">
+                        <span className="h-1.5 w-1.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
                       </div>
                     </div>
                   ) : (
-                    <div className="h-2 w-2 rounded-full bg-slate-800 border border-slate-700" />
+                    <div className="h-2 w-2 rounded-full bg-slate-200 dark:bg-slate-800 border border-slate-300 dark:border-slate-700" />
                   )}
                 </div>
 
                 <span
                   className={`text-xs font-semibold transition-colors duration-300 ${
                     isCompleted
-                      ? "text-slate-400"
+                      ? "text-slate-400 dark:text-slate-500"
                       : isActive
-                      ? "text-white font-bold"
-                      : "text-slate-600"
+                      ? "text-slate-900 dark:text-white font-bold"
+                      : "text-slate-400 dark:text-slate-600"
                   }`}
                 >
                   {step.label}
@@ -148,21 +148,21 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
       </div>
 
       {/* Terminal logs console */}
-      <div className="flex flex-col h-[280px] rounded-2xl border border-white/10 bg-slate-950/80 p-5 shadow-2xl overflow-hidden font-mono text-[11px] leading-relaxed select-none backdrop-blur-md">
+      <div className="flex flex-col h-[280px] rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950/80 p-5 shadow-sm dark:shadow-2xl overflow-hidden font-mono text-[11px] leading-relaxed select-none backdrop-blur-md">
         
         {/* Terminal Header */}
-        <div className="flex items-center justify-between pb-3 border-b border-slate-900 shrink-0">
+        <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-900 shrink-0">
           <div className="flex items-center gap-1.5">
-            <span className="h-2.5 w-2.5 rounded-full bg-red-500/80" />
-            <span className="h-2.5 w-2.5 rounded-full bg-amber-500/80" />
-            <span className="h-2.5 w-2.5 rounded-full bg-emerald-500/80" />
-            <span className="ml-2 text-slate-500 text-[10px] font-bold">azure-foundry-o4-mini@agent</span>
+            <span className="h-2.5 w-2.5 rounded-full bg-red-400/85 dark:bg-red-500/80" />
+            <span className="h-2.5 w-2.5 rounded-full bg-amber-400/85 dark:bg-amber-50/80" style={{ backgroundColor: "rgb(245 158 11)" }} />
+            <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/85 dark:bg-emerald-500/80" />
+            <span className="ml-2 text-slate-400 dark:text-slate-500 text-[10px] font-bold">azure-foundry-o4-mini@agent</span>
           </div>
-          <span className="h-2 w-2 animate-pulse rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
+          <span className="h-2 w-2 animate-pulse rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)] dark:shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
         </div>
 
         {/* Console Logs Area */}
-        <div className="flex-1 overflow-y-auto mt-4 space-y-2 pr-2 text-slate-300 scrollbar-thin scrollbar-thumb-slate-800 scrollbar-track-transparent">
+        <div className="flex-1 overflow-y-auto mt-4 space-y-2 pr-2 text-slate-700 dark:text-slate-300 scrollbar-thin scrollbar-thumb-slate-200 dark:scrollbar-thumb-slate-800 scrollbar-track-transparent">
           {logs.map((log, index) => (
             <motion.div
               key={index}
@@ -170,19 +170,19 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
               animate={{ opacity: 1, x: 0 }}
               className="flex gap-2"
             >
-              <span className="text-slate-600 select-none">{log.time}</span>
-              <span className={log.type === "system" ? "text-indigo-400" : "text-emerald-400"}>
+              <span className="text-slate-400 dark:text-slate-600 select-none">{log.time}</span>
+              <span className={log.type === "system" ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"}>
                 [{log.type}]
               </span>
-              <span className="text-slate-200">{log.message}</span>
+              <span className="text-slate-700 dark:text-slate-200">{log.message}</span>
             </motion.div>
           ))}
           {/* Active blinking prompt marker */}
           {logs.length < mockLogs.length && (
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-slate-600 select-none">+{(logs.length * 1.0 + 0.2).toFixed(1)}s</span>
-              <span className="text-indigo-400 select-none">[active]</span>
-              <span className="h-3.5 w-1.5 bg-indigo-500 animate-pulse" />
+              <span className="text-slate-400 dark:text-slate-600 select-none">+{(logs.length * 1.0 + 0.2).toFixed(1)}s</span>
+              <span className="text-indigo-600 dark:text-indigo-400 select-none">[active]</span>
+              <span className="h-3.5 w-1.5 bg-indigo-600 dark:bg-indigo-500 animate-pulse" />
             </div>
           )}
           <div ref={consoleEndRef} />
