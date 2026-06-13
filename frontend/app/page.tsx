@@ -4,6 +4,7 @@ import { useEffect, useState } from "react";
 
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
+import { AgentWorkflow } from "../components/AgentWorkflow";
 import { analyzeResearchPaper } from "../lib/api";
 import type { AnalysisResult } from "../types/analysis";
 
@@ -98,6 +99,8 @@ export default function Home(): JSX.Element {
           </p>
 
           <UploadSection onAnalyze={handleAnalyze} loading={loading} />
+
+          <AgentWorkflow loading={loading} />
 
           {error ? (
             <div className="mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-left dark:border-red-900 dark:bg-red-950/40">
