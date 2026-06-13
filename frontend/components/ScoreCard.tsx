@@ -1,54 +1,106 @@
+"use client";
+
 interface ScoreCardProps {
   score: number;
   justification: string;
 }
 
-function getScoreClasses(score: number): { text: string; bar: string; border: string } {
+function getScoreColors(score: number): { text: string; stroke: string; bg: string; badge: string; label: string } {
   if (score >= 70) {
     return {
       text: "text-emerald-600 dark:text-emerald-400",
-      bar: "bg-emerald-500",
-      border: "border-emerald-500",
+      stroke: "stroke-emerald-500",
+      bg: "bg-emerald-50 dark:bg-emerald-950/20",
+      badge: "bg-emerald-100 text-emerald-800 dark:bg-emerald-900/40 dark:text-emerald-300",
+      label: "Strong",
     };
   }
 
   if (score >= 40) {
     return {
       text: "text-amber-600 dark:text-amber-400",
-      bar: "bg-amber-500",
-      border: "border-amber-500",
+      stroke: "stroke-amber-500",
+      bg: "bg-amber-50 dark:bg-amber-950/20",
+      badge: "bg-amber-100 text-amber-800 dark:bg-amber-900/40 dark:text-amber-300",
+      label: "Moderate",
     };
   }
 
   return {
     text: "text-red-600 dark:text-red-400",
-    bar: "bg-red-500",
-    border: "border-red-500",
+    stroke: "stroke-red-500",
+    bg: "bg-red-50 dark:bg-red-950/20",
+    badge: "bg-red-100 text-red-800 dark:bg-red-900/40 dark:text-red-300",
+    label: "Needs Work",
   };
 }
 
 export function ScoreCard({ score, justification }: ScoreCardProps): JSX.Element {
-  const scoreClasses = getScoreClasses(score);
+  const colors = getScoreColors(score);
   const normalizedScore = Math.max(0, Math.min(100, score));
 
+  // Circumference of circle with r=36 is 2 * pi * 36 = 226.2
+  const radius = 36;
+  const circumference = 2 * Math.PI * radius;
+  const strokeDashoffset = circumference - (circumference * normalizedScore) / 100;
+
   return (
-    <section className="border-t border-gray-200 py-7 dark:border-gray-800 md:grid md:grid-cols-[220px_1fr] md:gap-8">
-      <div className={`mb-4 border-l-2 pl-3 md:mb-0 ${scoreClasses.border}`}>
-        <h2 className="text-sm font-medium text-gray-900 dark:text-white">Publication score</h2>
+    <div className="rounded-2xl border border-gray-100 bg-gray-50/50 p-6 text-center backdrop-blur-sm transition-all duration-300 dark:border-gray-800/60 dark:bg-gray-900/20 hover:shadow-md">
+      <h3 className="text-xs font-semibold tracking-wider uppercase text-gray-400 dark:text-gray-500">
+        Publication Readiness
+      </h3>
+
+      {/* Radial Progress Circle */}
+      <div className="relative mx-auto mt-6 flex h-32 w-32 items-center justify-center">
+        <svg className="h-full w-full -rotate-90">
+          {/* Background circle */}
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            className="stroke-gray-200 fill-none dark:stroke-gray-800/80"
+            strokeWidth="6"
+          />
+          {/* Active progress circle */}
+          <circle
+            cx="64"
+            cy="64"
+            r={radius}
+            className={`fill-none transition-all duration-1000 ease-out ${colors.stroke}`}
+            strokeWidth="6"
+            strokeDasharray={circumference}
+            strokeDashoffset={strokeDashoffset}
+            strokeLinecap="round"
+          />
+        </svg>
+
+        {/* Score text in center */}
+        <div className="absolute flex flex-col items-center justify-center">
+          <span className={`text-3xl font-bold tracking-tight tabular-nums ${colors.text}`}>
+            {score}
+          </span>
+          <span className="text-[10px] font-medium text-gray-400 uppercase tracking-widest dark:text-gray-500">
+            Score
+          </span>
+        </div>
       </div>
 
-      <div className="min-w-0">
-        <div className="flex items-end gap-2">
-          <span className={`text-5xl font-semibold tabular-nums tracking-tight ${scoreClasses.text}`}>{score}</span>
-          <span className="pb-1 text-lg text-gray-400 dark:text-gray-500">/100</span>
-        </div>
-
-        <div className="mt-4 h-1 w-full rounded-full bg-gray-100 dark:bg-gray-900">
-          <div className={`h-1 rounded-full ${scoreClasses.bar}`} style={{ width: `${normalizedScore}%` }} />
-        </div>
-
-        <p className="mt-4 text-sm leading-7 text-gray-500 dark:text-gray-400">{justification}</p>
+      {/* Badge label */}
+      <div className="mt-4 flex justify-center">
+        <span className={`inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ${colors.badge}`}>
+          {colors.label}
+        </span>
       </div>
-    </section>
+
+      {/* Justification Text */}
+      <div className="mt-5 border-t border-gray-100 pt-4 text-left dark:border-gray-800/60">
+        <h4 className="text-xs font-semibold uppercase text-gray-400 tracking-wider dark:text-gray-500">
+          Justification
+        </h4>
+        <p className="mt-2 text-xs leading-relaxed text-gray-500 dark:text-gray-400">
+          {justification}
+        </p>
+      </div>
+    </div>
   );
 }
