@@ -5,3 +5,4 @@ pymupdf
 groq
 pydantic
 python-dotenv
+openai
