@@ -87,7 +87,7 @@ export function ScoreCard({ score, justification }: ScoreCardProps): JSX.Element
       initial={{ opacity: 0, scale: 0.95 }}
       animate={{ opacity: 1, scale: 1 }}
       transition={{ duration: 0.5, type: "spring" }}
-      className={`rounded-2xl border bg-white dark:bg-slate-900/40 p-6 text-center backdrop-blur-xl transition-all duration-300 ${colors.glow}`}
+      className={`rounded-2xl border bg-white dark:bg-slate-900/40 p-4 sm:p-6 text-center backdrop-blur-xl transition-all duration-300 ${colors.glow}`}
     >
       <h3 className="text-xs font-semibold tracking-wider uppercase text-slate-400 dark:text-slate-500">
         Publication Readiness

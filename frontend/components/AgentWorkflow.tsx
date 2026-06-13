@@ -75,10 +75,10 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
   if (!loading) return null;
 
   return (
-    <div className="mt-10 grid gap-8 md:grid-cols-[300px_1fr] text-left">
+    <div className="mt-10 grid gap-6 grid-cols-1 lg:grid-cols-[280px_1fr] text-left">
       
       {/* Visual Pipeline Checklist with Connecting Line */}
-      <div className="relative rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-6 shadow-sm dark:shadow-xl backdrop-blur-md">
+      <div className="relative rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-4 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-md">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
           Agent Reasoning Pipeline
         </h4>
@@ -148,7 +148,7 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
       </div>
 
       {/* Terminal logs console */}
-      <div className="flex flex-col h-[280px] rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950/80 p-5 shadow-sm dark:shadow-2xl overflow-hidden font-mono text-[11px] leading-relaxed select-none backdrop-blur-md">
+      <div className="flex flex-col h-[280px] rounded-2xl border border-slate-200 dark:border-white/10 bg-white dark:bg-slate-950/80 p-4 sm:p-5 shadow-sm dark:shadow-2xl overflow-hidden font-mono text-[11px] leading-relaxed select-none backdrop-blur-md">
         
         {/* Terminal Header */}
         <div className="flex items-center justify-between pb-3 border-b border-slate-100 dark:border-slate-900 shrink-0">
@@ -168,21 +168,21 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
               key={index}
               initial={{ opacity: 0, x: -5 }}
               animate={{ opacity: 1, x: 0 }}
-              className="flex gap-2"
+              className="flex gap-2 min-w-0"
             >
-              <span className="text-slate-400 dark:text-slate-600 select-none">{log.time}</span>
-              <span className={log.type === "system" ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"}>
+              <span className="text-slate-400 dark:text-slate-600 select-none shrink-0">{log.time}</span>
+              <span className={`shrink-0 ${log.type === "system" ? "text-indigo-600 dark:text-indigo-400" : "text-emerald-600 dark:text-emerald-400"}`}>
                 [{log.type}]
               </span>
-              <span className="text-slate-700 dark:text-slate-200">{log.message}</span>
+              <span className="text-slate-700 dark:text-slate-200 break-words min-w-0">{log.message}</span>
             </motion.div>
           ))}
           {/* Active blinking prompt marker */}
           {logs.length < mockLogs.length && (
             <div className="flex items-center gap-1 mt-1">
-              <span className="text-slate-400 dark:text-slate-600 select-none">+{(logs.length * 1.0 + 0.2).toFixed(1)}s</span>
-              <span className="text-indigo-600 dark:text-indigo-400 select-none">[active]</span>
-              <span className="h-3.5 w-1.5 bg-indigo-600 dark:bg-indigo-500 animate-pulse" />
+              <span className="text-slate-400 dark:text-slate-600 select-none shrink-0">+{(logs.length * 1.0 + 0.2).toFixed(1)}s</span>
+              <span className="text-indigo-600 dark:text-indigo-400 select-none shrink-0">[active]</span>
+              <span className="h-3.5 w-1.5 bg-indigo-600 dark:bg-indigo-500 animate-pulse shrink-0" />
             </div>
           )}
           <div ref={consoleEndRef} />

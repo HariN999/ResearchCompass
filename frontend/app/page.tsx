@@ -15,8 +15,10 @@ export default function Home(): JSX.Element {
   const [error, setError] = useState<string | null>(null);
   const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(true);
+  const [mounted, setMounted] = useState<boolean>(false);
 
   useEffect(() => {
+    setMounted(true);
     setIsDark(document.documentElement.classList.contains("dark"));
   }, []);
 
@@ -69,7 +71,7 @@ export default function Home(): JSX.Element {
 
       {/* Navigation */}
       <nav className="relative z-10 border-b border-slate-200/80 dark:border-slate-800/60 bg-white/60 dark:bg-slate-950/60 backdrop-blur-md">
-        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-4 sm:px-6">
           <div className="text-sm font-semibold tracking-tight text-slate-900 dark:text-white flex items-center gap-2">
             <span className="h-2 w-2 rounded-full bg-indigo-500 shadow-[0_0_10px_rgba(99,102,241,0.5)]" />
             ResearchCompass
@@ -79,27 +81,31 @@ export default function Home(): JSX.Element {
             <button
               type="button"
               onClick={toggleTheme}
-              className="rounded-md p-2 text-slate-550 dark:text-slate-400 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
+              className="rounded-md p-2 text-slate-500 dark:text-slate-400 transition-all duration-150 hover:bg-slate-100 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
               aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
             >
-              {isDark ? (
-                <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
-                  <path
-                    strokeLinecap="round"
-                    strokeWidth={1.5}
-                    d="M12 2.75v2M12 19.25v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2.75 12h2M19.25 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"
-                  />
-                </svg>
+              {mounted ? (
+                isDark ? (
+                  <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
+                    <path
+                      strokeLinecap="round"
+                      strokeWidth={1.5}
+                      d="M12 2.75v2M12 19.25v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2.75 12h2M19.25 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"
+                    />
+                  </svg>
+                ) : (
+                  <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={1.5}
+                      d="M20.25 14.15A7.5 7.5 0 0 1 9.85 3.75 8.25 8.25 0 1 0 20.25 14.15Z"
+                    />
+                  </svg>
+                )
               ) : (
-                <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={1.5}
-                    d="M20.25 14.15A7.5 7.5 0 0 1 9.85 3.75 8.25 8.25 0 1 0 20.25 14.15Z"
-                  />
-                </svg>
+                <div className="h-[18px] w-[18px]" />
               )}
             </button>
 
@@ -111,7 +117,7 @@ export default function Home(): JSX.Element {
       </nav>
 
       {/* Main Body container */}
-      <div className="relative z-10 mx-auto max-w-6xl px-6 py-6 md:py-16">
+      <div className="relative z-10 mx-auto max-w-6xl px-4 sm:px-6 py-6 md:py-16">
         <AnimatePresence mode="wait">
           
           {/* LANDING HERO VIEW */}
@@ -122,7 +128,7 @@ export default function Home(): JSX.Element {
               initial="hidden"
               animate="show"
               exit={{ opacity: 0, y: -20 }}
-              className="grid gap-12 md:grid-cols-[1fr_420px] items-center py-6 md:py-12"
+              className="grid gap-8 grid-cols-1 lg:grid-cols-[1fr_400px] lg:gap-12 items-center py-6 lg:py-12"
             >
               
               {/* Left Column: Value Prop */}

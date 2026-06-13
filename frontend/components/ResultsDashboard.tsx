@@ -53,10 +53,10 @@ export function ResultsDashboard({ result, filename }: ResultsDashboardProps): J
   };
 
   return (
-    <div className="flex flex-col gap-8 md:flex-row items-start min-w-0">
+    <div className="flex flex-col gap-8 lg:flex-row items-start min-w-0">
       
       {/* LEFT SIDEBAR PANEL: Sticky Score & Meta */}
-      <div className="w-full md:w-80 md:sticky md:top-6 shrink-0 space-y-6">
+      <div className="w-full lg:w-80 lg:sticky lg:top-6 shrink-0 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-1 gap-6 lg:space-y-0">
         
         {/* Score Card Widget */}
         <ScoreCard
@@ -69,7 +69,7 @@ export function ResultsDashboard({ result, filename }: ResultsDashboardProps): J
           initial={{ opacity: 0, y: 10 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ delay: 0.2 }}
-          className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-6 shadow-sm dark:shadow-xl backdrop-blur-xl"
+          className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-4 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-xl"
         >
           <div className="flex items-center gap-2 pb-3 border-b border-slate-200 dark:border-slate-800/80">
             <FileText className="h-3.5 w-3.5 text-indigo-600 dark:text-indigo-400" />
@@ -115,7 +115,7 @@ export function ResultsDashboard({ result, filename }: ResultsDashboardProps): J
               <button
                 key={tab.id}
                 onClick={() => setActiveTab(tab.id)}
-                className={`relative flex items-center gap-2 px-5 py-4 text-xs font-bold whitespace-nowrap uppercase tracking-wider transition-all duration-200 ${
+                className={`relative flex items-center gap-1.5 sm:gap-2 px-3 py-3 sm:px-5 sm:py-4 text-[10px] sm:text-xs font-bold whitespace-nowrap uppercase tracking-wider transition-all duration-200 ${
                   isActive
                     ? "text-indigo-600 dark:text-indigo-400"
                     : "text-slate-500 hover:text-slate-800 dark:text-slate-500 dark:hover:text-slate-300"
