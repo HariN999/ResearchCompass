@@ -54,7 +54,8 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
     let currentLogIndex = 0;
     const logInterval = setInterval(() => {
       if (currentLogIndex < mockLogs.length) {
-        setLogs((prev) => [...prev, mockLogs[currentLogIndex]]);
+        const nextLog = mockLogs[currentLogIndex];
+        setLogs((prev) => [...prev, nextLog]);
         currentLogIndex++;
       }
     }, 1100);
