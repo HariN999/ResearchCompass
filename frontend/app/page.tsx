@@ -46,7 +46,7 @@ export default function Home(): JSX.Element {
       <nav className="border-b border-gray-200 bg-white transition-all duration-150 dark:border-gray-800 dark:bg-gray-950">
         <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
           <div className="text-sm font-semibold tracking-tight text-gray-900 dark:text-white">
-            ResearchGap <span className="text-indigo-500 dark:text-indigo-400">AI</span>
+            ResearchCompass
           </div>
 
           <div className="flex items-center gap-2">

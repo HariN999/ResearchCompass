@@ -6,7 +6,7 @@ from routes import router
 
 load_dotenv()
 
-app = FastAPI(title="ResearchGap AI")
+app = FastAPI(title="ResearchCompass API", version="1.0.0")
 
 app.add_middleware(
     CORSMiddleware,
@@ -21,4 +21,4 @@ app.include_router(router, prefix="/api")
 
 @app.get("/")
 async def root() -> dict[str, str]:
-    return {"status": "ResearchGap AI is running", "version": "1.0.0"}
+    return {"status": "ResearchCompass is running", "version": "1.0.0"}
