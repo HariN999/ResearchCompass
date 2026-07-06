@@ -28,6 +28,22 @@ Processing triggers real-time pipeline status logs detailing extraction, chunkin
 Once completed, the dashboard presents a structured analysis categorized into metadata insights, methodology audits, thesis viva defense questions, and a publication readiness score.
 ![Results Dashboard](docs/screenshots/results.png)
 
+## Quick Demo
+
+```text
+Upload PDF
+    ↓
+ Extract
+    ↓
+  Embed
+    ↓
+Retrieve
+    ↓
+Analyze
+    ↓
+Results
+```
+
 ---
 
 ## What is ResearchCompass?
@@ -247,4 +263,4 @@ Contributions are welcome. Please open an issue to discuss proposed changes befo
 ---
 
 ## License
-Distributed under the MIT License. See `LICENSE` for details.
+Distributed under the MIT License. See [LICENSE](LICENSE) for details.
