@@ -38,6 +38,9 @@ class DocumentChunk(BaseModel):
     page_start: int = Field(ge=1)
     page_end: int = Field(ge=1)
     page_numbers: list[int]
+    document_id: str = ""
+    page_number: int = 1
+    detected_section: str = "Unknown"
 
 
 class DocumentMetadata(BaseModel):

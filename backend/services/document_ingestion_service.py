@@ -40,8 +40,8 @@ class DocumentIngestionService:
                 logger.warning("Ingestion failed: File %s has no extractable text content.", file_name)
                 raise EmptyDocumentError("The uploaded PDF did not contain extractable text.")
 
-            chunks = self._chunking_service.chunk_pages(pages)
             document_id = str(uuid4())
+            chunks = self._chunking_service.chunk_pages(pages, document_id=document_id)
             metadata = build_document_metadata(
                 document_id=document_id,
                 file_name=file_name,
