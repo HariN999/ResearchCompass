@@ -38,3 +38,28 @@ class RetrievalService:
             document_id=document_id,
         )
 
+    def search(
+        self,
+        query: str,
+        top_k: int = 5,
+    ) -> list[RetrievedChunk]:
+        if not query or not query.strip():
+            logger.warning("Empty or whitespace query rejected in search.")
+            raise ValueError("Query string cannot be empty or whitespace-only.")
+        if top_k <= 0:
+            logger.warning("Invalid top_k=%d rejected in search.", top_k)
+            raise ValueError("top_k must be a positive integer.")
+
+        logger.info("Executing semantic similarity search for query (length: %d chars) with top_k: %d", len(query), top_k)
+
+        import time
+        start_time = time.perf_counter()
+        results = self._vector_store_service.query(
+            query_text=query,
+            top_k=top_k,
+            document_id=None,
+        )
+        duration = time.perf_counter() - start_time
+        logger.info("Semantic search completed in %.4f seconds. Results retrieved: %d", duration, len(results))
+        return results
+

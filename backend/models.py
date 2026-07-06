@@ -109,3 +109,5 @@ class RetrievedChunk(BaseModel):
     page_end: int = Field(ge=1)
     page_numbers: list[int]
     metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+    section: str = "Unknown"
+    page_number: int = 1
