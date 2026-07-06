@@ -21,7 +21,7 @@ from exceptions import (
     ProviderConfigError,
     VectorStoreError,
 )
-from models import AnalysisResponse, RetrievedChunk
+from models import AnalysisResponse, RetrievedChunk, DocumentIngestionStatus, BatchIngestionResponse
 from services.analysis_service import AnalysisService
 from services.document_ingestion_service import DocumentIngestionService
 from services.retrieval_service import RetrievalService
@@ -161,4 +161,45 @@ async def analyze(
     except Exception as exc:
         logger.critical("Unexpected unhandled exception during analyze request for file %s: %s", filename, str(exc), exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
+
+
+@router.post("/ingest", response_model=BatchIngestionResponse)
+async def ingest(
+    ingestion_service: Annotated[DocumentIngestionService, Depends(get_document_ingestion_service)],
+    retrieval_service: Annotated[RetrievalService, Depends(get_retrieval_service)],
+    files: list[UploadFile] = File(...),
+) -> BatchIngestionResponse:
+    results: list[DocumentIngestionStatus] = []
+    logger.info("Batch ingestion request received for %d files.", len(files))
+
+    for file in files:
+        filename = file.filename or "uploaded-document.pdf"
+        logger.info("Processing batch upload file: %s", filename)
+        try:
+            file_bytes = await file.read()
+            ingestion_result = ingestion_service.ingest_pdf(
+                file_name=filename,
+                content_type=file.content_type,
+                file_bytes=file_bytes,
+            )
+            retrieval_service.index_document(ingestion_result)
+            results.append(
+                DocumentIngestionStatus(
+                    file_name=filename,
+                    status="success",
+                    document_id=ingestion_result.metadata.document_id,
+                )
+            )
+            logger.info("Successfully ingested and indexed file %s in batch.", filename)
+        except Exception as exc:
+            logger.error("Failed to ingest file %s in batch: %s", filename, str(exc), exc_info=True)
+            results.append(
+                DocumentIngestionStatus(
+                    file_name=filename,
+                    status="failed",
+                    error=str(exc),
+                )
+            )
+
+    return BatchIngestionResponse(results=results)
 

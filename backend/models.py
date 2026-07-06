@@ -111,3 +111,14 @@ class RetrievedChunk(BaseModel):
     metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
     section: str = "Unknown"
     page_number: int = 1
+
+
+class DocumentIngestionStatus(BaseModel):
+    file_name: str
+    status: str  # "success" or "failed"
+    document_id: str | None = None
+    error: str | None = None
+
+
+class BatchIngestionResponse(BaseModel):
+    results: list[DocumentIngestionStatus]
