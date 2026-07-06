@@ -26,7 +26,7 @@ Processing triggers real-time pipeline status logs detailing extraction, chunkin
 
 ### 4. Structured Review Dashboard
 Once completed, the dashboard presents a structured analysis categorized into metadata insights, methodology audits, thesis viva defense questions, and a publication readiness score.
-![Results Dashboard](docs/screenshots/Results.png)
+![Results Dashboard](docs/screenshots/results.png)
 
 ---
 
