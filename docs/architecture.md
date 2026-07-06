@@ -1,72 +1,104 @@
-# ResearchCompass — Current Architecture
+# ResearchCompass — Architecture Reference
 
-## Request flow
+This document describes the modular architecture, component responsibilities, request lifecycles, and design decisions of **ResearchCompass** (an open-source AI Research Intelligence Platform).
+
+---
+
+## 1. Request Flow
+
+When an academic manuscript is analyzed, the process flows sequentially through the frontend, API gateway, document ingestion pipeline, database indexing services, and LLM providers:
 
 ```text
-User Browser → Next.js Frontend → FastAPI Backend → PyMuPDF → Groq → Pydantic → Frontend Dashboard
+ 1. File Upload          2. API Route           3. Ingestion & Extraction
+[Next.js Client] ───► [FastAPI app.py] ───► [DocumentIngestionService]
+      ▲                                                  │ (Extract text using PyMuPDF)
+      │                                                  ▼
+      │                                       ┌──────────────────────────┐
+      │                                       ▼ (For Vector Indexing)    ▼ (For LLM Analysis)
+      │                              [ChunkingService]          [to_analysis_input()]
+      │                               (Split text)               (First 16,000 chars)
+      │                                       │                          │
+      │                                       ▼                          ▼
+      │                              [EmbeddingService]         [AnalysisService]
+      │                           (Generate local vectors)               │
+      │                                       │                          ▼
+      │                                       ▼                  [Provider Layer]
+      │                             [VectorStoreService]        (Groq/OpenRouter/Ollama)
+      │                            (Upsert to ChromaDB)                  │
+      │                                                                  ▼
+      │                                                         [Pydantic Validation]
+      │ 8. Render Results Dashboard                                      │ (AnalysisResponse)
+      └──────────────────────────────────────────────────────────────────┘
 ```
 
-## Component breakdown
+---
 
-### Frontend
+## 2. Component Breakdown
 
-The Next.js frontend provides PDF selection, loading and error states, theme management, and a structured results dashboard. It sends the selected file as `multipart/form-data` to `POST /api/analyze` and renders the returned analysis contract.
+ResearchCompass is structured into distinct modules to separate concerns and support modular extensions.
 
-The frontend uses local React state because the current workflow is limited to one upload and one result. `NEXT_PUBLIC_API_URL` configures the backend origin and defaults to `http://localhost:8000` for local development.
+### A. Frontend Web Interface
+*   **Next.js App Shell**: Located in [frontend/app/page.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/app/page.tsx). It governs local page state, theme settings (light/dark mode toggle), and file upload interactions.
+*   **Progress Stepper**: Managed in [frontend/components/AnalysisWorkflow.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/components/AnalysisWorkflow.tsx). It tracks the asynchronous pipeline state and provides animated feedback during the analysis steps.
+*   **Dashboard Layout**: Implemented in [frontend/components/ResultsDashboard.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/components/ResultsDashboard.tsx) and associated subcomponents like [ScoreCard.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/components/ScoreCard.tsx), displaying structured metrics, weaknesses, future improvements, and thesis defense questions.
 
-### FastAPI API
+### B. FastAPI Router & Dependency Injection
+*   **API Router**: Defined in [backend/routes.py](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/routes.py). It declares the `POST /api/analyze` endpoint which receives uploads as multipart form data.
+*   **Dependency Injection**: Defined in [backend/dependencies.py](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/dependencies.py). It uses `@lru_cache` to instantiate and reuse singleton services, clean separation of configuration boundaries, and dependency mapping.
+*   **Pydantic Contracts**: Declared in [backend/models.py](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/models.py). It enforces the input/output schemas (e.g. `AnalysisResponse`, `DocumentMetadata`, `DocumentPage`, `DocumentChunk`) ensuring type safety across boundaries.
 
-The FastAPI backend registers the `/api/analyze` route, checks that the upload declares a PDF content type, extracts its text, and rejects documents with no extractable content. The root route exposes basic application status.
+### C. Document Ingestion Engine
+*   **Ingestion Coordinator**: [DocumentIngestionService](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/services/document_ingestion_service.py) coordinates the validation of the uploaded file bytes, coordinates raw text extraction, runs the chunking parser, compiles document metadata, and structures the ingested output.
+*   **PDF Processing**: [pdf_service.py](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/services/pdf_service.py) uses PyMuPDF (`fitz`) to validate document dimensions, size limits (up to 20MB), page lengths (up to 200 pages), and password restrictions. It extracts clean, normalized textual lines from each page.
 
-The API currently handles analysis in the request lifecycle. There is no background job queue, persistence layer, authentication system, or rate limiting.
+### D. Chunking & Local Embeddings
+*   **Text Splitter**: [ChunkingService](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/services/chunking_service.py) splits extracted text into overlapping segments (default: 1800 character limit, 250 character tail overlap) keeping page start/end offsets intact. Large paragraphs are split cleanly at word boundaries.
+*   **Embedding Generator**: [EmbeddingService](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/services/embedding_service.py) loads SentenceTransformer model `BAAI/bge-small-en-v1.5` locally to generate normalized vector arrays for each document chunk.
 
-### PDF extraction
+### E. Retrieval Foundation Layer
+*   **Vector Store Manager**: [VectorStoreService](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/services/vector_store_service.py) initializes a persistent client for ChromaDB (`chromadb`), establishes collection schemas, generates unique composite IDs, and indexes chunk texts alongside metadata filters.
+*   **Semantic Router**: [RetrievalService](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/services/retrieval_service.py) acts as a query manager for looking up top-K matching documents by vector cosine similarity scores.
 
-PyMuPDF opens the uploaded bytes in memory and extracts plain text from each page. The combined text is trimmed to the first 12,000 characters before analysis.
+### F. Provider Layer & Inference
+*   **Base Abstract Class**: [LLMProvider](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/providers/base.py) defines the contract for text completion models.
+*   **Provider Implementations**: 
+    *   [GroqProvider](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/providers/groq.py): Interfaces with the Groq API (defaulting to Llama 3.3 70B).
+    *   [OpenRouterProvider](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/providers/openrouter.py): Integrates with OpenRouter endpoints.
+    *   [OllamaProvider](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/providers/ollama.py): Targets local LLM services running via Ollama.
+*   **Provider Factory**: [factory.py](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/backend/providers/factory.py) maps the environment variable `LLM_PROVIDER` to the requested class.
 
-This keeps model input bounded, but it can omit later sections of long papers. The current extractor does not perform OCR, semantic section detection, table extraction, or layout reconstruction.
+---
 
-### Groq analysis
+## 3. Retrieval Foundation Separation
 
-The analysis service sends the extracted text to `llama-3.3-70b-versatile` through Groq. A system prompt requests a structured academic review and JSON response. The response is decoded and validated against the backend `AnalysisResponse` Pydantic model before it is returned to the frontend.
+It is critical to distinguish current capabilities from planned retrieval functions:
 
-The workflow is a single LLM call. It is not an autonomous agent and does not currently use tools, vector search, retrieval-augmented generation, external literature, or citations.
+> [!IMPORTANT]
+> **Active Ingestion vs. Passive Retrieval**
+> *   **Current Capability**: Every document analyzed goes through the ingestion pipeline, is chunked, embedded, and indexed into the ChromaDB collection. This establishes a **Retrieval Foundation**.
+> *   **Prompt Execution**: In the current phase, the actual prompt context is constructed by taking the first 16,000 characters of page text directly using `DocumentIngestionResult.to_analysis_input()`. It does **not** perform a similarity search query to construct the context window.
+> *   **Rationale**: Composing context directly from consecutive pages ensures that context flows logically (ideal for structured peer reviews of a single document), while the ChromaDB storage lays the infrastructure for multi-document comparisons and grounded gap detection in future phases.
 
-## Response contract
+---
 
-The API returns fields for:
+## 4. Technical Design Decisions
 
-- Research domain
-- Executive summary
-- Problem statement
-- Methodology
-- Contributions, strengths, and weaknesses
-- Research gaps and novelty assessment
-- Implementation improvements and future work
-- Viva questions
-- Publication-readiness score and justification
+*   **PyMuPDF (`fitz`)**: Selected for high processing speed and robust extraction of multi-column layout flows standard in computer science conferences.
+*   **Local SentenceTransformers**: By choosing `BAAI/bge-small-en-v1.5`, ResearchCompass can index large manuscripts without generating recurring external API costs or disclosing document data to third-party embedding platforms.
+*   **JSON Mode & Pydantic**: Structured academic reviews require deterministic structure to be rendered correctly in a web UI. Rather than parsing unstructured text using regular expressions, the LLM is requested in JSON mode and verified against the backend Pydantic schema `AnalysisResponse`. This ensures data conforms to type restrictions before reaching the client interface.
+*   **Dependency Injection Isolation**: Decoupled service construction makes testing modules individually (e.g. testing `ChunkingService` without loading `EmbeddingService`) clean and robust.
 
-The same contract is represented by a TypeScript interface in the frontend.
+---
 
-## Configuration
+## 5. Extensions & Future Scope
 
-Backend:
+*   **True RAG for Literature Grounding**: Integrate vector index retrieval during critique generation. Instead of evaluating novelty based on LLM weights, the system can fetch related abstract vectors from an index of prior works and append them to the context.
+*   **External Citation Resolvers**: Read citations from bibliography blocks, cross-reference them via public bibliographic repositories (Crossref/Semantic Scholar), and analyze references for citation depth, missing seminal works, and publication dates.
+*   **Draft Synthesis**: Compare and highlight differences, improvements, or regressions between multiple drafts of the same research manuscript.
 
-```env
-GROQ_API_KEY=your_groq_api_key_here
-```
+---
 
-Frontend:
-
-```env
-NEXT_PUBLIC_API_URL=http://localhost:8000
-```
-
-## Current boundaries
-
-This document describes the Phase 1 architecture only. Later phases will introduce chunking, sentence-transformer embeddings, ChromaDB, retrieval, provider abstraction, and evidence-backed citations. Those capabilities are intentionally not part of the current implementation.
-
-## Error Handling and Logging
+## 6. Error Handling and Logging
 
 ### Custom Exceptions
 To ensure clean separation of concerns, the core services (business logic layer) raise custom Python exceptions subclassed from `ResearchCompassError` (which subclasses `ValueError` for backward compatibility):
