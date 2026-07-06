@@ -80,7 +80,7 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
             Drop your manuscript here
           </p>
           <p className="mt-1.5 text-xs text-text-muted">
-            Supports .pdf, .tex, .docx
+            Max 20MB | Max 200 Pages. Supports .pdf
           </p>
 
           {selectedFile ? (
