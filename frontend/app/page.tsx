@@ -15,6 +15,7 @@ import { StatisticCard } from "../components/dashboard/StatisticCard";
 import { RecentActivityList } from "../components/dashboard/RecentActivityList";
 import { EmptyState } from "../components/dashboard/EmptyState";
 import { MultiUploadPanel } from "../components/upload/MultiUploadPanel";
+import { AnalysisWorkspace } from "../components/analysis/AnalysisWorkspace";
 import { DocumentToolbar } from "../components/library/DocumentToolbar";
 import { SearchBar } from "../components/library/SearchBar";
 import { FilterPanel } from "../components/library/FilterPanel";
@@ -56,6 +57,8 @@ export default function Home(): JSX.Element {
   const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
   const [libraryDocuments, setLibraryDocuments] = useState<LibraryDocument[]>(PLACEHOLDER_DOCUMENTS);
   const [libraryMessage, setLibraryMessage] = useState<string>("");
+  const [selectedDocument, setSelectedDocument] = useState<LibraryDocument | null>(null);
+  const [analysisFile, setAnalysisFile] = useState<File | null>(null);
 
   const mockActivities = [
     {
@@ -123,6 +126,7 @@ export default function Home(): JSX.Element {
   async function handleAnalyze(file: File): Promise<void> {
     setLoading(true);
     setError(null);
+    setAnalysisFile(file);
 
     try {
       const analysis = await analyzeResearchPaper(file);
@@ -172,6 +176,8 @@ export default function Home(): JSX.Element {
   }, [libraryDocuments, libraryFilters]);
 
   const handleSelectDocument = (id: string) => {
+    const nextDocument = libraryDocuments.find((doc) => doc.id === id) ?? null;
+    setSelectedDocument(nextDocument);
     setSelectedIds((prev) => {
       const next = new Set(prev);
       if (next.has(id)) {
@@ -203,16 +209,15 @@ export default function Home(): JSX.Element {
 
     switch (action) {
       case "analyze":
+        setSelectedDocument(targetDoc ?? null);
         setActiveTab("analyze");
         setLibraryMessage(`Opened analysis for ${targetDoc?.title ?? "the selected document"}.`);
         break;
       case "compare":
-        setActiveTab("compare");
-        setLibraryMessage(`Prepared a comparison for ${targetDoc?.title ?? "the selected document"}.`);
+        setLibraryMessage("Compare is not part of this workspace scope.");
         break;
       case "literature-review":
-        setActiveTab("literature-review");
-        setLibraryMessage(`Opened literature review for ${targetDoc?.title ?? "the selected document"}.`);
+        setLibraryMessage("Literature review is not part of this workspace scope.");
         break;
       case "delete":
         setLibraryDocuments((prev) => prev.filter((doc) => doc.id !== id));
@@ -415,6 +420,26 @@ export default function Home(): JSX.Element {
         </div>
       )}
 
+      {activeTab === "analyze" && (
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+          <div className="mx-auto w-full max-w-7xl">
+            <AnalysisWorkspace
+              document={selectedDocument}
+              result={result}
+              filename={analyzedFilename}
+              loading={loading}
+              error={error}
+              onAnalyze={handleAnalyze}
+              onRefresh={() => {
+                if (analysisFile) {
+                  void handleAnalyze(analysisFile);
+                }
+              }}
+            />
+          </div>
+        </div>
+      )}
+
       {activeTab === "library" && (
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -473,7 +498,7 @@ export default function Home(): JSX.Element {
         </div>
       )}
 
-      {activeTab !== "dashboard" && activeTab !== "library" && (
+      {activeTab !== "dashboard" && activeTab !== "library" && activeTab !== "analyze" && (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md w-full bg-surface border border-border rounded-large p-8 text-center shadow-card">
             <h2 className="text-heading-l font-bold text-text-primary mb-2">
