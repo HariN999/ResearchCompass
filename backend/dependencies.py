@@ -3,6 +3,7 @@ from functools import lru_cache
 from config import settings
 from providers.factory import create_llm_provider
 from services.analysis_service import AnalysisService
+from services.comparison_service import ComparisonService
 from services.document_ingestion_service import DocumentIngestionService
 from services.embedding_service import EmbeddingService
 from services.retrieval_service import RetrievalService
@@ -38,4 +39,12 @@ def get_retrieval_service() -> RetrievalService:
     return RetrievalService(
         vector_store_service=get_vector_store_service(),
         top_k=settings.retrieval_top_k,
+    )
+
+
+@lru_cache
+def get_comparison_service() -> ComparisonService:
+    return ComparisonService(
+        retrieval_service=get_retrieval_service(),
+        llm_provider=create_llm_provider(),
     )
