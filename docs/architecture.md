@@ -65,3 +65,31 @@ NEXT_PUBLIC_API_URL=http://localhost:8000
 ## Current boundaries
 
 This document describes the Phase 1 architecture only. Later phases will introduce chunking, sentence-transformer embeddings, ChromaDB, retrieval, provider abstraction, and evidence-backed citations. Those capabilities are intentionally not part of the current implementation.
+
+## Error Handling and Logging
+
+### Custom Exceptions
+To ensure clean separation of concerns, the core services (business logic layer) raise custom Python exceptions subclassed from `ResearchCompassError` (which subclasses `ValueError` for backward compatibility):
+*   `DocumentIngestionError` (Base for PDF validation/parsing failures)
+    *   `InvalidPDFError`
+    *   `PasswordProtectedPDFError`
+    *   `EmptyDocumentError`
+    *   `DocumentSizeLimitError`
+    *   `DocumentPageLimitError`
+*   `EmbeddingError` (Failed embedding loading or generation)
+*   `VectorStoreError` (ChromaDB collection mapping, querying, or indexing failures)
+*   `LLMProviderError` (Provider communication, timeout, or HTTP status failures)
+*   `ProviderConfigError` (Missing env vars or invalid timeout configurations)
+*   `AnalysisError` (Base for review execution errors)
+    *   `InvalidLLMResponseError` (Malformed JSON or failed schema validation)
+
+### Route Translation
+The API routes intercept these domain-specific exceptions and map them to clean FastAPI `HTTPException` responses with safe, user-friendly messages. 
+For instance, `EmptyDocumentError` resolves to HTTP 400 Bad Request, while `LLMProviderError` maps to HTTP 502 Bad Gateway. Internal errors return a generic HTTP 500 without disclosing system details.
+
+### Logging Instrumentation
+Key backend milestones are instrumented with the Python standard `logging` library using appropriate levels (`INFO`, `WARNING`, `ERROR`, `CRITICAL`):
+*   `INFO`: Tracks request startup, successful ingestion/chunking/indexing, and LLM query timings.
+*   `WARNING`: Indicates user-side input issues (empty uploads, oversized pages, password blocks).
+*   `ERROR` / `CRITICAL`: Logs complete exception tracebacks for network timeouts, schema validation failures, or database issues. No sensitive secrets or raw keys are ever printed or exposed to API clients.
+

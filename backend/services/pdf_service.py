@@ -1,12 +1,21 @@
 from __future__ import annotations
 
+import logging
 import re
 from datetime import datetime, timezone
 
 import fitz
-from fastapi import HTTPException
 
+from exceptions import (
+    DocumentPageLimitError,
+    DocumentSizeLimitError,
+    EmptyDocumentError,
+    InvalidPDFError,
+    PasswordProtectedPDFError,
+)
 from models import DocumentMetadata, DocumentPage
+
+logger = logging.getLogger(__name__)
 
 MAX_PDF_SIZE_BYTES = 20 * 1024 * 1024
 MAX_PDF_PAGE_COUNT = 200
@@ -24,49 +33,64 @@ def validate_pdf_upload(
     file_bytes: bytes,
 ) -> None:
     if not file_bytes:
-        raise HTTPException(status_code=400, detail="The uploaded file is empty.")
+        logger.warning("Empty file uploaded: %s", file_name)
+        raise EmptyDocumentError("The uploaded file is empty.")
 
     if len(file_bytes) > MAX_PDF_SIZE_BYTES:
-        raise HTTPException(
-            status_code=413,
-            detail=f"PDF files must be smaller than {MAX_PDF_SIZE_BYTES // (1024 * 1024)} MB.",
+        logger.warning(
+            "Uploaded file %s exceeds size limit: %d bytes (limit: %d)",
+            file_name,
+            len(file_bytes),
+            MAX_PDF_SIZE_BYTES,
+        )
+        raise DocumentSizeLimitError(
+            f"PDF files must be smaller than {MAX_PDF_SIZE_BYTES // (1024 * 1024)} MB."
         )
 
     if content_type not in SUPPORTED_PDF_CONTENT_TYPES:
-        raise HTTPException(
-            status_code=400,
-            detail="Only PDF files are supported.",
+        logger.warning(
+            "Unsupported PDF content type %s for file %s",
+            content_type,
+            file_name,
         )
+        raise InvalidPDFError("Only PDF files are supported.")
 
     if not file_name.lower().endswith(".pdf"):
-        raise HTTPException(
-            status_code=400,
-            detail="The uploaded file must use a .pdf extension.",
+        logger.warning(
+            "Uploaded file %s does not end with .pdf extension",
+            file_name,
         )
+        raise InvalidPDFError("The uploaded file must use a .pdf extension.")
 
     if not file_bytes.startswith(b"%PDF-"):
-        raise HTTPException(
-            status_code=400,
-            detail="The uploaded file does not appear to be a valid PDF.",
+        logger.warning(
+            "Uploaded file %s is missing the %%PDF- magic header",
+            file_name,
         )
+        raise InvalidPDFError("The uploaded file does not appear to be a valid PDF.")
 
 
 def extract_pages_from_pdf(file_bytes: bytes) -> tuple[list[DocumentPage], dict[str, object]]:
     try:
         with fitz.open(stream=file_bytes, filetype="pdf") as document:
             if document.needs_pass:
-                raise HTTPException(
-                    status_code=422,
-                    detail="Password-protected PDFs are not supported.",
+                logger.warning("Attempted to read password-protected PDF.")
+                raise PasswordProtectedPDFError(
+                    "Password-protected PDFs are not supported."
                 )
 
             if document.page_count == 0:
-                raise HTTPException(status_code=422, detail="The PDF has no pages.")
+                logger.warning("PDF has no pages.")
+                raise EmptyDocumentError("The PDF has no pages.")
 
             if document.page_count > MAX_PDF_PAGE_COUNT:
-                raise HTTPException(
-                    status_code=413,
-                    detail=f"PDF files must have at most {MAX_PDF_PAGE_COUNT} pages.",
+                logger.warning(
+                    "PDF page count %d exceeds page limit of %d.",
+                    document.page_count,
+                    MAX_PDF_PAGE_COUNT,
+                )
+                raise DocumentPageLimitError(
+                    f"PDF files must have at most {MAX_PDF_PAGE_COUNT} pages."
                 )
 
             pages: list[DocumentPage] = []
@@ -105,17 +129,17 @@ def extract_pages_from_pdf(file_bytes: bytes) -> tuple[list[DocumentPage], dict[
                 "modification_date": _parse_pdf_datetime(metadata.get("modDate")),
             }
             return pages, extracted_metadata
-    except HTTPException:
+    except (PasswordProtectedPDFError, EmptyDocumentError, DocumentPageLimitError):
         raise
     except fitz.FileDataError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail="The uploaded file could not be parsed as a PDF.",
+        logger.error("PyMuPDF failed to parse file as PDF: %s", str(exc), exc_info=True)
+        raise InvalidPDFError(
+            "The uploaded file could not be parsed as a PDF."
         ) from exc
-    except RuntimeError as exc:
-        raise HTTPException(
-            status_code=400,
-            detail="The uploaded PDF is corrupted or unreadable.",
+    except Exception as exc:
+        logger.error("Unexpected error during PDF parsing: %s", str(exc), exc_info=True)
+        raise InvalidPDFError(
+            "The uploaded PDF is corrupted or unreadable."
         ) from exc
 
 

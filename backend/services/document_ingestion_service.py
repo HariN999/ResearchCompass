@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import logging
 from uuid import uuid4
 
+from exceptions import EmptyDocumentError
 from models import DocumentIngestionResult
 from services.chunking_service import ChunkingService
 from services.pdf_service import (
@@ -9,6 +11,8 @@ from services.pdf_service import (
     extract_pages_from_pdf,
     validate_pdf_upload,
 )
+
+logger = logging.getLogger(__name__)
 
 
 class DocumentIngestionService:
@@ -22,26 +26,39 @@ class DocumentIngestionService:
         content_type: str | None,
         file_bytes: bytes,
     ) -> DocumentIngestionResult:
-        validate_pdf_upload(
-            file_name=file_name,
-            content_type=content_type,
-            file_bytes=file_bytes,
-        )
+        logger.info("Starting document ingestion for file: %s", file_name)
+        try:
+            validate_pdf_upload(
+                file_name=file_name,
+                content_type=content_type,
+                file_bytes=file_bytes,
+            )
 
-        pages, pdf_metadata = extract_pages_from_pdf(file_bytes)
+            pages, pdf_metadata = extract_pages_from_pdf(file_bytes)
 
-        if not pdf_metadata["has_text_content"]:
-            raise ValueError("The uploaded PDF did not contain extractable text.")
+            if not pdf_metadata["has_text_content"]:
+                logger.warning("Ingestion failed: File %s has no extractable text content.", file_name)
+                raise EmptyDocumentError("The uploaded PDF did not contain extractable text.")
 
-        chunks = self._chunking_service.chunk_pages(pages)
-        document_id = str(uuid4())
-        metadata = build_document_metadata(
-            document_id=document_id,
-            file_name=file_name,
-            content_type=content_type or "application/pdf",
-            file_size_bytes=len(file_bytes),
-            chunk_count=len(chunks),
-            pdf_metadata=pdf_metadata,
-        )
+            chunks = self._chunking_service.chunk_pages(pages)
+            document_id = str(uuid4())
+            metadata = build_document_metadata(
+                document_id=document_id,
+                file_name=file_name,
+                content_type=content_type or "application/pdf",
+                file_size_bytes=len(file_bytes),
+                chunk_count=len(chunks),
+                pdf_metadata=pdf_metadata,
+            )
 
-        return DocumentIngestionResult(metadata=metadata, pages=pages, chunks=chunks)
+            logger.info(
+                "Successfully ingested document %s (pages: %d, chunks: %d, size: %d bytes)",
+                file_name,
+                len(pages),
+                len(chunks),
+                len(file_bytes),
+            )
+            return DocumentIngestionResult(metadata=metadata, pages=pages, chunks=chunks)
+        except Exception as exc:
+            logger.error("Failed to ingest PDF document %s: %s", file_name, str(exc), exc_info=True)
+            raise

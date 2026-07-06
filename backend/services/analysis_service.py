@@ -1,7 +1,12 @@
 import json
+import logging
+from pydantic import ValidationError
 
+from exceptions import AnalysisError, InvalidLLMResponseError, LLMProviderError
 from models import AnalysisResponse
 from providers.base import LLMProvider
+
+logger = logging.getLogger(__name__)
 
 
 SYSTEM_PROMPT = """
@@ -50,9 +55,30 @@ class AnalysisService:
         self._llm_provider = llm_provider
 
     def analyze_paper(self, paper_text: str) -> AnalysisResponse:
+        logger.info("Starting academic manuscript analysis (size: %d chars)", len(paper_text))
         try:
             response_text = self._llm_provider.generate(SYSTEM_PROMPT, paper_text)
-            parsed = json.loads(response_text)
-            return AnalysisResponse(**parsed)
+        except LLMProviderError:
+            # Let LLM provider errors propagate directly
+            raise
         except Exception as exc:
-            raise ValueError(f"Failed to analyze research paper: {exc}") from exc
+            logger.error("LLM generation failed: %s", str(exc), exc_info=True)
+            raise AnalysisError(f"Failed to analyze research paper: {exc}") from exc
+
+        try:
+            parsed = json.loads(response_text)
+        except json.JSONDecodeError as exc:
+            logger.error("LLM response is not valid JSON. Response received: %s", response_text, exc_info=True)
+            raise InvalidLLMResponseError("Failed to analyze research paper: LLM response was not valid JSON.") from exc
+
+        try:
+            response_model = AnalysisResponse(**parsed)
+            logger.info("Manuscript analysis successfully completed.")
+            return response_model
+        except ValidationError as exc:
+            logger.error("LLM response failed schema validation. Parsed object: %s", str(parsed), exc_info=True)
+            raise InvalidLLMResponseError("Failed to analyze research paper: LLM response did not pass schema validation.") from exc
+        except Exception as exc:
+            logger.error("Unexpected error parsing LLM response model: %s", str(exc), exc_info=True)
+            raise AnalysisError(f"Failed to analyze research paper: {exc}") from exc
+

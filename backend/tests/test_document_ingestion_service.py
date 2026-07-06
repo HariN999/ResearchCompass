@@ -51,15 +51,14 @@ class DocumentIngestionServiceTests(unittest.TestCase):
 
     def test_non_pdf_signature_is_rejected(self) -> None:
         service = DocumentIngestionService()
+        from exceptions import InvalidPDFError
 
-        with self.assertRaises(HTTPException) as context:
+        with self.assertRaises(InvalidPDFError):
             service.ingest_pdf(
                 file_name="paper.pdf",
                 content_type="application/pdf",
                 file_bytes=b"not-a-real-pdf",
             )
-
-        self.assertEqual(context.exception.status_code, 400)
 
     def test_pdf_without_extractable_text_is_rejected(self) -> None:
         pdf_bytes = _build_pdf([""])

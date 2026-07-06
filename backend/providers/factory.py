@@ -1,15 +1,20 @@
+import logging
 import os
 
+from exceptions import ProviderConfigError
 from providers.base import LLMProvider
 from providers.groq import GroqProvider
 from providers.ollama import OllamaProvider
 from providers.openrouter import OpenRouterProvider
 
+logger = logging.getLogger(__name__)
+
 
 def _required_environment_variable(name: str) -> str:
     value = os.getenv(name)
     if not value:
-        raise ValueError(f"{name} environment variable is not set.")
+        logger.error("Configuration error: required environment variable %s is not set.", name)
+        raise ProviderConfigError(f"{name} environment variable is not set.")
     return value
 
 
@@ -18,14 +23,17 @@ def _timeout_seconds() -> float:
     try:
         timeout = float(raw_value)
     except ValueError as exc:
-        raise ValueError("LLM_TIMEOUT_SECONDS must be a number.") from exc
+        logger.error("Configuration error: LLM_TIMEOUT_SECONDS '%s' must be a numeric value.", raw_value, exc_info=True)
+        raise ProviderConfigError("LLM_TIMEOUT_SECONDS must be a number.") from exc
     if timeout <= 0:
-        raise ValueError("LLM_TIMEOUT_SECONDS must be greater than zero.")
+        logger.error("Configuration error: LLM_TIMEOUT_SECONDS '%s' must be positive.", raw_value)
+        raise ProviderConfigError("LLM_TIMEOUT_SECONDS must be greater than zero.")
     return timeout
 
 
 def create_llm_provider() -> LLMProvider:
     provider_name = os.getenv("LLM_PROVIDER", "groq").strip().lower()
+    logger.info("Initializing LLM provider: %s", provider_name)
 
     if provider_name == "groq":
         return GroqProvider(
@@ -50,6 +58,8 @@ def create_llm_provider() -> LLMProvider:
         )
 
     supported = "groq, openrouter, ollama"
-    raise ValueError(
+    logger.error("Configuration error: Unsupported LLM_PROVIDER '%s'", provider_name)
+    raise ProviderConfigError(
         f"Unsupported LLM_PROVIDER '{provider_name}'. Supported providers: {supported}."
     )
+
