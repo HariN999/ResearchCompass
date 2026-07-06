@@ -132,6 +132,8 @@ class VectorStoreService:
                     page_end=int(metadata.get("page_end") or 1),
                     page_numbers=self._page_numbers_from_metadata(metadata),
                     metadata=metadata,
+                    section=str(metadata.get("section") or "Unknown"),
+                    page_number=int(metadata.get("page_number") or 1),
                 )
             )
 
