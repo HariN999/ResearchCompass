@@ -1,10 +1,10 @@
 from functools import lru_cache
-import os
 
+from config import settings
 from providers.factory import create_llm_provider
 from services.analysis_service import AnalysisService
 from services.document_ingestion_service import DocumentIngestionService
-from services.embedding_service import DEFAULT_EMBEDDING_MODEL, EmbeddingService
+from services.embedding_service import EmbeddingService
 from services.retrieval_service import RetrievalService
 from services.vector_store_service import VectorStoreService
 
@@ -21,17 +21,15 @@ def get_document_ingestion_service() -> DocumentIngestionService:
 
 @lru_cache
 def get_embedding_service() -> EmbeddingService:
-    return EmbeddingService(
-        model_name=os.getenv("EMBEDDING_MODEL_NAME", DEFAULT_EMBEDDING_MODEL)
-    )
+    return EmbeddingService(model_name=settings.embedding_model_name)
 
 
 @lru_cache
 def get_vector_store_service() -> VectorStoreService:
     return VectorStoreService(
         embedding_service=get_embedding_service(),
-        persist_directory=os.getenv("CHROMA_PERSIST_DIRECTORY", "./chroma"),
-        collection_name=os.getenv("CHROMA_COLLECTION_NAME", "research_documents"),
+        persist_directory=settings.chroma_persist_directory,
+        collection_name=settings.chroma_collection_name,
     )
 
 
@@ -39,5 +37,5 @@ def get_vector_store_service() -> VectorStoreService:
 def get_retrieval_service() -> RetrievalService:
     return RetrievalService(
         vector_store_service=get_vector_store_service(),
-        top_k=int(os.getenv("RETRIEVAL_TOP_K", "5")),
+        top_k=settings.retrieval_top_k,
     )
