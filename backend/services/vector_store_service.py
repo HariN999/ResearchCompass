@@ -146,19 +146,7 @@ class VectorStoreService:
         ingestion_result: DocumentIngestionResult,
         chunk: DocumentChunk,
     ) -> dict[str, str | int | float | bool]:
-        return {
-            "document_id": ingestion_result.metadata.document_id,
-            "file_name": ingestion_result.metadata.file_name,
-            "chunk_id": chunk.chunk_id,
-            "chunk_index": chunk.chunk_index,
-            "page_start": chunk.page_start,
-            "page_end": chunk.page_end,
-            "page_numbers": ",".join(str(page_number) for page_number in chunk.page_numbers),
-            "char_count": chunk.char_count,
-            "word_count": chunk.word_count,
-            "detected_section": chunk.detected_section,
-            "page_number": chunk.page_number,
-        }
+        return chunk.to_metadata_dict(file_name=ingestion_result.metadata.file_name)
 
     def _page_numbers_from_metadata(
         self,

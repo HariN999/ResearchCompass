@@ -35,11 +35,11 @@ class SectionAwareChunkingTests(unittest.TestCase):
 
         # There should be exactly 2 chunks because the section heading forced a flush
         self.assertEqual(len(result), 2)
-        self.assertEqual(result[0].detected_section, "Abstract")
+        self.assertEqual(result[0].section, "Abstract")
         self.assertEqual(result[0].document_id, "doc-123")
         self.assertEqual(result[0].page_number, 1)
 
-        self.assertEqual(result[1].detected_section, "Introduction")
+        self.assertEqual(result[1].section, "Introduction")
         self.assertEqual(result[1].document_id, "doc-123")
         self.assertEqual(result[1].page_number, 1)
 
@@ -80,7 +80,34 @@ class SectionAwareChunkingTests(unittest.TestCase):
         ]
         result = service.chunk_pages(pages)
         self.assertEqual(len(result), 1)
-        self.assertEqual(result[0].detected_section, "Unknown")
+        self.assertEqual(result[0].section, "Unknown")
+
+    def test_metadata_enrichment_and_serialization(self) -> None:
+        from models import DocumentChunk
+        chunk = DocumentChunk(
+            chunk_id="chunk-0001",
+            chunk_index=1,
+            text="Some text",
+            char_count=9,
+            word_count=2,
+            page_start=1,
+            page_end=1,
+            page_numbers=[1],
+            document_id="doc-999",
+            page_number=1,
+            section="Methodology",
+            document_title="Sample Title",
+            authors="John Doe",
+            created_at="2026-07-06T12:00:00Z"
+        )
+        meta = chunk.to_metadata_dict(file_name="sample.pdf")
+        self.assertEqual(meta["document_id"], "doc-999")
+        self.assertEqual(meta["chunk_id"], "chunk-0001")
+        self.assertEqual(meta["section"], "Methodology")
+        self.assertEqual(meta["document_title"], "Sample Title")
+        self.assertEqual(meta["authors"], "John Doe")
+        self.assertEqual(meta["created_at"], "2026-07-06T12:00:00Z")
+        self.assertEqual(meta["file_name"], "sample.pdf")
 
 
 if __name__ == "__main__":
