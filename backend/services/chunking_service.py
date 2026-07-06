@@ -57,7 +57,7 @@ class ChunkingService:
                                 text=" ".join(accumulated_sentences),
                                 page_numbers=chunk_page_numbers,
                                 document_id=document_id,
-                                detected_section=current_section,
+                                section=current_section,
                             )
                         )
                         chunk_index += 1
@@ -87,7 +87,7 @@ class ChunkingService:
                                         text=" ".join(accumulated_sentences),
                                         page_numbers=chunk_page_numbers,
                                         document_id=document_id,
-                                        detected_section=current_section,
+                                        section=current_section,
                                     )
                                 )
                                 chunk_index += 1
@@ -104,7 +104,7 @@ class ChunkingService:
                     text=" ".join(accumulated_sentences),
                     page_numbers=chunk_page_numbers,
                     document_id=document_id,
-                    detected_section=current_section,
+                    section=current_section,
                 )
             )
 
@@ -154,7 +154,7 @@ class ChunkingService:
         text: str,
         page_numbers: list[int],
         document_id: str = "",
-        detected_section: str = "Unknown",
+        section: str = "Unknown",
     ) -> DocumentChunk:
         normalized_text = text.strip()
         primary_page = page_numbers[0] if page_numbers else 1
@@ -169,7 +169,7 @@ class ChunkingService:
             page_numbers=page_numbers,
             document_id=document_id,
             page_number=primary_page,
-            detected_section=detected_section,
+            section=section,
         )
 
     def _split_page_into_paragraphs(self, text: str) -> list[str]:

@@ -42,6 +42,17 @@ class DocumentIngestionService:
 
             document_id = str(uuid4())
             chunks = self._chunking_service.chunk_pages(pages, document_id=document_id)
+
+            from datetime import datetime, timezone
+            created_at_str = datetime.now(timezone.utc).isoformat().replace("+00:00", "Z")
+            title = pdf_metadata.get("title") or file_name
+            author = pdf_metadata.get("author") or "Unknown"
+
+            for chunk in chunks:
+                chunk.document_title = title
+                chunk.authors = author
+                chunk.created_at = created_at_str
+
             metadata = build_document_metadata(
                 document_id=document_id,
                 file_name=file_name,

@@ -40,7 +40,28 @@ class DocumentChunk(BaseModel):
     page_numbers: list[int]
     document_id: str = ""
     page_number: int = 1
-    detected_section: str = "Unknown"
+    section: str = "Unknown"
+    document_title: str = ""
+    authors: str = ""
+    created_at: str = ""
+
+    def to_metadata_dict(self, file_name: str = "") -> dict[str, str | int | float | bool]:
+        return {
+            "document_id": self.document_id,
+            "chunk_id": self.chunk_id,
+            "chunk_index": self.chunk_index,
+            "page_start": self.page_start,
+            "page_end": self.page_end,
+            "page_numbers": ",".join(str(p) for p in self.page_numbers),
+            "page_number": self.page_number,
+            "char_count": self.char_count,
+            "word_count": self.word_count,
+            "section": self.section,
+            "document_title": self.document_title,
+            "authors": self.authors,
+            "created_at": self.created_at,
+            "file_name": file_name,
+        }
 
 
 class DocumentMetadata(BaseModel):
