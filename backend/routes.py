@@ -21,10 +21,45 @@ from exceptions import (
     ProviderConfigError,
     VectorStoreError,
 )
-from models import AnalysisResponse
+from models import AnalysisResponse, RetrievedChunk
 from services.analysis_service import AnalysisService
 from services.document_ingestion_service import DocumentIngestionService
 from services.retrieval_service import RetrievalService
+import time
+
+def _assemble_rag_context(chunks: list[RetrievedChunk], max_chars: int = 16000) -> str:
+    seen_ids = set()
+    unique_chunks = []
+    for chunk in chunks:
+        if chunk.chunk_id not in seen_ids:
+            seen_ids.add(chunk.chunk_id)
+            unique_chunks.append(chunk)
+
+    def get_chunk_index(c: RetrievedChunk) -> int:
+        idx = c.metadata.get("chunk_index")
+        try:
+            return int(idx) if idx is not None else 0
+        except (TypeError, ValueError):
+            return 0
+
+    unique_chunks.sort(key=get_chunk_index)
+
+    context_parts = []
+    current_char_count = 0
+    for chunk in unique_chunks:
+        section = chunk.metadata.get("section") or "Unknown"
+        page_numbers = chunk.metadata.get("page_numbers") or ",".join(str(p) for p in chunk.page_numbers)
+        block = f"[Section: {section}] [Pages: {page_numbers}]\n{chunk.text}\n"
+
+        if current_char_count + len(block) > max_chars:
+            if not context_parts:
+                context_parts.append(block[:max_chars])
+            break
+
+        context_parts.append(block)
+        current_char_count += len(block)
+
+    return "\n---\n".join(context_parts)
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -49,7 +84,41 @@ async def analyze(
             file_bytes=file_bytes,
         )
         retrieval_service.index_document(ingestion_result)
-        response = analysis_service.analyze_paper(ingestion_result.to_analysis_input())
+
+        retrieval_start = time.perf_counter()
+        document_id = ingestion_result.metadata.document_id
+        try:
+            query_text = "abstract introduction methodology experiments results discussion conclusion"
+            chunks = retrieval_service.retrieve(
+                query_text=query_text,
+                top_k=5,
+                document_id=document_id,
+            )
+            retrieval_duration = time.perf_counter() - retrieval_start
+
+            if not chunks:
+                logger.warning("Retrieval returned 0 chunks for document %s. Using fallback.", document_id)
+                logger.info("Retrieval metrics - duration: %.4f seconds, count: 0, fallback: True", retrieval_duration)
+                analysis_input = ingestion_result.to_analysis_input()
+            else:
+                logger.info(
+                    "Retrieval metrics - duration: %.4f seconds, count: %d, fallback: False",
+                    retrieval_duration,
+                    len(chunks),
+                )
+                analysis_input = _assemble_rag_context(chunks)
+        except Exception as exc:
+            retrieval_duration = time.perf_counter() - retrieval_start
+            logger.error(
+                "Retrieval failed for document %s. Using fallback. Exception: %s",
+                document_id,
+                str(exc),
+                exc_info=True,
+            )
+            logger.info("Retrieval metrics - duration: %.4f seconds, count: 0, fallback: True", retrieval_duration)
+            analysis_input = ingestion_result.to_analysis_input()
+
+        response = analysis_service.analyze_paper(analysis_input)
         logger.info("API request successfully completed: POST /api/analyze for file %s", filename)
         return response
     except EmptyDocumentError as exc:
