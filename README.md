@@ -8,8 +8,25 @@ A local document analysis tool that parses scientific papers, stores them in a v
 [![Groq Cloud](https://img.shields.io/badge/Groq-llama--3.3--70b-orange)](https://groq.com)
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-![Results Dashboard Screenshot](docs/screenshots/results.png)
-*Figure 1: The structured dashboard layout showing document metadata, score assessment, methodology evaluation, and thesis preparation panels.*
+## Interface Overview & E2E Workflow
+
+The application workflow is divided into three key stages: Ingestion, Processing, and Review Analysis.
+
+### 1. Landing & Manuscript Dropzone
+Users land on a clean, dual-column screen where they can drag and drop draft papers in PDF format.
+![Landing Page](docs/screenshots/Home.png)
+
+### 2. Manuscript Selection & Loading
+Once a file is selected, the "Run Analysis" controller triggers the ingestion pipeline.
+![Manuscript Selected](docs/screenshots/Upload.png)
+
+### 3. Live Ingestion Monitor
+Processing triggers real-time pipeline status logs detailing extraction, chunking, and embedding stages.
+![Ingestion Processing](docs/screenshots/Processing.png)
+
+### 4. Structured Review Dashboard
+Once completed, the dashboard presents a structured analysis categorized into metadata insights, methodology audits, thesis viva defense questions, and a publication readiness score.
+![Results Dashboard](docs/screenshots/Results.png)
 
 ---
 
