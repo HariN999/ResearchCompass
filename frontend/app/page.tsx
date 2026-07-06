@@ -7,7 +7,7 @@ import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
 import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
 import { analyzeResearchPaper, compareDocuments, generateLiteratureReview, ingestDocuments } from "../lib/api";
-import type { AnalysisResponse, ComparisonResponse, LiteratureReviewResponse } from "../types/analysis";
+import type { AnalysisResponse, ComparisonResponse, LiteratureReviewResponse, SemanticSearchResult } from "../types/analysis";
 import { AppShell } from "../components/layout/AppShell";
 import { HeroSection } from "../components/dashboard/HeroSection";
 import { QuickActionCard } from "../components/dashboard/QuickActionCard";
@@ -18,6 +18,7 @@ import { MultiUploadPanel } from "../components/upload/MultiUploadPanel";
 import { AnalysisWorkspace } from "../components/analysis/AnalysisWorkspace";
 import { ComparisonWorkspace } from "../components/comparison/ComparisonWorkspace";
 import { LiteratureReviewWorkspace } from "../components/literature/LiteratureReviewWorkspace";
+import { SemanticSearchWorkspace } from "../components/semantic-search/SemanticSearchWorkspace";
 import { DocumentToolbar } from "../components/library/DocumentToolbar";
 import { SearchBar } from "../components/library/SearchBar";
 import { FilterPanel } from "../components/library/FilterPanel";
@@ -69,6 +70,10 @@ export default function Home(): JSX.Element {
   const [literatureReviewLoading, setLiteratureReviewLoading] = useState<boolean>(false);
   const [literatureReviewError, setLiteratureReviewError] = useState<string | null>(null);
   const [literatureReviewSelection, setLiteratureReviewSelection] = useState<LibraryDocument[]>([]);
+  const [semanticSearchQuery, setSemanticSearchQuery] = useState<string>("");
+  const [semanticSearchResults, setSemanticSearchResults] = useState<SemanticSearchResult[]>([]);
+  const [semanticSearchLoading, setSemanticSearchLoading] = useState<boolean>(false);
+  const [semanticSearchError, setSemanticSearchError] = useState<string | null>(null);
 
   const mockActivities = [
     {
@@ -353,6 +358,69 @@ export default function Home(): JSX.Element {
     setLiteratureReviewError(null);
   };
 
+  const handleSemanticSearch = async (query: string) => {
+    const trimmedQuery = query.trim();
+    if (!trimmedQuery) {
+      setSemanticSearchResults([]);
+      setSemanticSearchError(null);
+      return;
+    }
+
+    setSemanticSearchLoading(true);
+    setSemanticSearchError(null);
+
+    try {
+      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+      const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/search`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ query: trimmedQuery, top_k: 6 }),
+      });
+
+      if (!response.ok) {
+        const errorBody = await response.json().catch(() => null) as { detail?: string } | null;
+        throw new Error(errorBody?.detail ?? "Failed to search the indexed papers.");
+      }
+
+      const payload = await response.json();
+      const results = Array.isArray(payload?.results) ? payload.results : [];
+      setSemanticSearchResults(results as SemanticSearchResult[]);
+    } catch (err) {
+      setSemanticSearchResults([]);
+      setSemanticSearchError(err instanceof Error ? err.message : "Something went wrong while searching the library.");
+    } finally {
+      setSemanticSearchLoading(false);
+    }
+  };
+
+  const handleSemanticSearchClear = () => {
+    setSemanticSearchQuery("");
+    setSemanticSearchResults([]);
+    setSemanticSearchError(null);
+  };
+
+  const handleOpenSemanticAnalysis = (result: SemanticSearchResult) => {
+    setSelectedDocument({
+      id: result.document_id,
+      title: result.document_title,
+      authors: result.authors,
+      domain: result.metadata?.research_domain ? String(result.metadata.research_domain) : "Research",
+      year: typeof result.metadata?.publication_year === "number" ? result.metadata.publication_year : null,
+      uploadDate: "",
+      pageCount: 0,
+      wordCount: 0,
+      chunkCount: 0,
+      status: "indexed",
+      tags: [],
+      fileName: result.document_title,
+      fileSizeBytes: 0,
+    });
+    setActiveTab("analyze");
+    setLibraryMessage(`Opened analysis context for ${result.document_title}.`);
+  };
+
   return (
     <AppShell
       activeTab={activeTab}
@@ -593,6 +661,23 @@ export default function Home(): JSX.Element {
               review={literatureReview}
               loading={literatureReviewLoading}
               error={literatureReviewError}
+            />
+          </div>
+        </div>
+      )}
+
+      {activeTab === "search" && (
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+          <div className="mx-auto w-full max-w-7xl">
+            <SemanticSearchWorkspace
+              query={semanticSearchQuery}
+              results={semanticSearchResults}
+              loading={semanticSearchLoading}
+              error={semanticSearchError}
+              onQueryChange={setSemanticSearchQuery}
+              onSearch={handleSemanticSearch}
+              onClear={handleSemanticSearchClear}
+              onOpenAnalysis={handleOpenSemanticAnalysis}
             />
           </div>
         </div>
