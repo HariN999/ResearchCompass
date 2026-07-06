@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
 import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
-import { analyzeResearchPaper } from "../lib/api";
+import { analyzeResearchPaper, ingestDocuments } from "../lib/api";
 import type { AnalysisResponse } from "../types/analysis";
 import { AppShell } from "../components/layout/AppShell";
 import { HeroSection } from "../components/dashboard/HeroSection";
@@ -14,6 +14,7 @@ import { QuickActionCard } from "../components/dashboard/QuickActionCard";
 import { StatisticCard } from "../components/dashboard/StatisticCard";
 import { RecentActivityList } from "../components/dashboard/RecentActivityList";
 import { EmptyState } from "../components/dashboard/EmptyState";
+import { MultiUploadPanel } from "../components/upload/MultiUploadPanel";
 import {
   FileText,
   Columns,
@@ -218,8 +219,14 @@ export default function Home(): JSX.Element {
 
                 {/* Upload Modal Drawer */}
                 {isUploadOpen && (
-                  <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
-                    <div className="bg-surface border border-border rounded-large max-w-md w-full p-6 shadow-dialog relative">
+                  <div
+                    className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
+                    onClick={(e) => { if (e.target === e.currentTarget) setIsUploadOpen(false); }}
+                    role="dialog"
+                    aria-modal="true"
+                    aria-label="Upload research papers"
+                  >
+                    <div className="bg-surface border border-border rounded-large max-w-xl w-full p-6 shadow-dialog relative max-h-[85vh] overflow-y-auto">
                       <button
                         type="button"
                         onClick={() => setIsUploadOpen(false)}
@@ -229,17 +236,19 @@ export default function Home(): JSX.Element {
                         ✕
                       </button>
                       <h3 className="text-heading-m font-bold text-text-primary mb-1 text-left">
-                        Start Review Process
+                        Upload Research Papers
                       </h3>
-                      <p className="text-small text-text-secondary mb-4 text-left">
-                        Select your draft manuscript in PDF format to run critique reviews.
+                      <p className="text-small text-text-secondary mb-5 text-left">
+                        Select one or more PDF manuscripts for ingestion into the vector library.
                       </p>
-                      <UploadSection
-                        onAnalyze={(file) => {
-                          setIsUploadOpen(false);
-                          handleAnalyze(file);
+                      <MultiUploadPanel
+                        onUpload={async (files) => {
+                          const response = await ingestDocuments(files);
+                          return response.results;
                         }}
-                        loading={loading}
+                        onUploadComplete={() => {
+                          setIsUploadOpen(false);
+                        }}
                       />
                     </div>
                   </div>
