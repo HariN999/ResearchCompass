@@ -13,28 +13,13 @@
 }
 
 .dark {
-  --background: #0B0F19;
-  --surface: rgba(18, 24, 37, 0.6);
-  --border: rgba(255, 255, 255, 0.08);
+  --background: #030712;
+  --surface: #111827;
+  --border: #1f2937;
   --text-primary: #ffffff;
   --text-secondary: #9ca3af;
   --text-muted: #6b7280;
-  --accent: #00F2FE;
-}
-
-.glass-card {
-  background: rgba(18, 24, 37, 0.45);
-  backdrop-filter: blur(12px);
-  -webkit-backdrop-filter: blur(12px);
-  border: 1px solid rgba(255, 255, 255, 0.08);
-  box-shadow: 0 8px 32px 0 rgba(0, 0, 0, 0.37);
-}
-
-.glass-pill {
-  background: rgba(255, 255, 255, 0.03);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  --accent: #6366f1;
 }
 
 @layer base {

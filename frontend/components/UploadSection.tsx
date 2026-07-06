@@ -1,7 +1,6 @@
 "use client";
 
 import { useRef, useState } from "react";
-import { UploadCloud, CheckCircle } from "lucide-react";
 
 interface UploadSectionProps {
   onAnalyze: (file: File) => void;
@@ -14,7 +13,9 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
   const inputRef = useRef<HTMLInputElement | null>(null);
 
   function selectFile(file: File): void {
-    setSelectedFile(file);
+    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
+      setSelectedFile(file);
+    }
   }
 
   function runAnalysis(): void {
@@ -24,12 +25,12 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
   }
 
   return (
-    <div className="mt-8 space-y-6">
+    <div className="mt-10">
       <div
-        className={`cursor-pointer rounded-2xl p-10 transition-all duration-300 glass-card relative overflow-hidden group ${
+        className={`cursor-pointer rounded-lg border border-dashed p-8 transition-all duration-150 ${
           isDragging
-            ? "border-accent/40 bg-accent/5 shadow-[0_0_25px_rgba(0,242,254,0.15)]"
-            : "hover:border-accent/20 hover:shadow-[0_0_20px_rgba(0,242,254,0.05)]"
+            ? "border-indigo-500 bg-indigo-50 dark:bg-gray-900"
+            : "border-gray-200 bg-white hover:border-gray-300 dark:border-gray-800 dark:bg-gray-950 dark:hover:border-gray-700"
         }`}
         role="button"
         tabIndex={0}
@@ -57,7 +58,7 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
         <input
           ref={inputRef}
           type="file"
-          accept=".pdf,.tex,.docx"
+          accept=".pdf"
           className="hidden"
           onChange={(event) => {
             const file = event.target.files?.item(0);
@@ -67,75 +68,54 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
           }}
         />
 
-        {/* Ambient background glow */}
-        <div className="absolute -inset-px bg-gradient-to-r from-accent/0 via-accent/5 to-accent/0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 pointer-events-none" />
+        <div className="mx-auto flex h-10 w-10 items-center justify-center rounded-lg border border-gray-200 dark:border-gray-800">
+          <svg
+            className="h-5 w-5 text-gray-400 dark:text-gray-500"
+            fill="none"
+            stroke="currentColor"
+            viewBox="0 0 24 24"
+            aria-hidden="true"
+          >
+            <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={1.75} d="M12 16V5m0 0 4 4m-4-4L8 9M5 19h14" />
+          </svg>
+        </div>
 
-        <div className="flex flex-col items-center text-center">
-          {/* Levitating Upload Icon container */}
-          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-full border border-white/5 bg-white/[0.02] shadow-[inset_0_1px_1px_rgba(255,255,255,0.05)] animate-levitate transition-all duration-300 group-hover:border-accent/30 group-hover:shadow-[0_0_15px_rgba(0,242,254,0.1)]">
-            <UploadCloud className="h-6 w-6 text-text-secondary group-hover:text-accent transition-colors duration-300" />
-          </div>
+        <p className="mt-4 text-sm font-medium text-gray-900 dark:text-white">Drop your PDF here</p>
+        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Click or drag to upload a research paper</p>
 
-          <p className="mt-5 text-sm font-semibold text-text-primary tracking-wide">
-            Drop your manuscript here
-          </p>
-          <p className="mt-1.5 text-xs text-text-muted">
-            Max 20MB | Max 200 Pages. Supports .pdf
-          </p>
-
-          {selectedFile ? (
-            <div className="mt-6 flex justify-center">
-              <div
-                className="flex items-center gap-2 rounded-full border border-accent/20 bg-accent/5 px-4 py-1.5 text-xs text-accent shadow-[0_0_10px_rgba(0,242,254,0.05)]"
-                onClick={(event) => event.stopPropagation()}
-              >
-                <CheckCircle className="h-3.5 w-3.5" />
-                <span className="truncate max-w-[200px] font-mono">{selectedFile.name}</span>
-                <button
-                  type="button"
-                  className="ml-1 text-accent/60 hover:text-accent font-bold"
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    setSelectedFile(null);
-                  }}
-                  aria-label="Clear selected file"
-                >
-                  ✕
-                </button>
-              </div>
-            </div>
-          ) : (
-            <div className="mt-6">
+        {selectedFile ? (
+          <div className="mt-5 flex justify-center">
+            <div
+              className="flex max-w-full items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+              onClick={(event) => event.stopPropagation()}
+            >
+              <span className="truncate">{selectedFile.name}</span>
               <button
                 type="button"
-                className="rounded-lg border border-white/10 bg-white/[0.02] px-4 py-1.5 text-xs font-semibold text-text-secondary hover:text-accent hover:border-accent/30 hover:bg-accent/5 transition-all duration-200 shadow-sm hover:shadow-[0_0_10px_rgba(0,242,254,0.1)]"
-                onClick={(e) => {
-                  e.stopPropagation();
-                  inputRef.current?.click();
-                }}
+                className="text-gray-400 transition-all duration-150 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
+                onClick={() => setSelectedFile(null)}
+                aria-label="Clear selected file"
               >
-                Select File
+                x
               </button>
             </div>
-          )}
-        </div>
+          </div>
+        ) : null}
       </div>
 
-      {selectedFile && (
-        <div className="flex justify-center animate-fadeIn">
-          <button
-            type="button"
-            onClick={runAnalysis}
-            disabled={loading}
-            className="w-full inline-flex items-center justify-center gap-2 rounded-xl bg-accent px-6 py-3 text-sm font-bold text-background transition-all duration-300 hover:shadow-[0_0_25px_rgba(0,242,254,0.3)] disabled:cursor-not-allowed disabled:bg-white/5 disabled:text-text-muted disabled:border disabled:border-white/5 disabled:shadow-none font-sans"
-          >
-            {loading && (
-              <span className="h-4 w-4 animate-spin rounded-full border-2 border-background/25 border-t-background" aria-hidden="true" />
-            )}
-            {loading ? "Analyzing Manuscript..." : "Run Analysis"}
-          </button>
-        </div>
-      )}
+      <div className="mt-5 flex justify-center">
+        <button
+          type="button"
+          onClick={runAnalysis}
+          disabled={!selectedFile || loading}
+          className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-5 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-indigo-500 disabled:cursor-not-allowed disabled:border disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400 dark:disabled:border-gray-800 dark:disabled:bg-gray-900 dark:disabled:text-gray-500"
+        >
+          {loading ? (
+            <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" aria-hidden="true" />
+          ) : null}
+          {loading ? "Analyzing" : selectedFile ? "Run Analysis" : "Select a PDF"}
+        </button>
+      </div>
     </div>
   );
 }
