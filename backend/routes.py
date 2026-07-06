@@ -1,7 +1,7 @@
 from fastapi import APIRouter, File, HTTPException, UploadFile
 
 from models import AnalysisResponse
-from services.foundry_service import analyze_paper
+from services.groq_service import analyze_paper
 from services.pdf_service import extract_text_from_pdf
 
 router = APIRouter()
