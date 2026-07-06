@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
 import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
-import { analyzeResearchPaper, ingestDocuments } from "../lib/api";
-import type { AnalysisResponse } from "../types/analysis";
+import { analyzeResearchPaper, compareDocuments, ingestDocuments } from "../lib/api";
+import type { AnalysisResponse, ComparisonResponse } from "../types/analysis";
 import { AppShell } from "../components/layout/AppShell";
 import { HeroSection } from "../components/dashboard/HeroSection";
 import { QuickActionCard } from "../components/dashboard/QuickActionCard";
@@ -16,6 +16,7 @@ import { RecentActivityList } from "../components/dashboard/RecentActivityList";
 import { EmptyState } from "../components/dashboard/EmptyState";
 import { MultiUploadPanel } from "../components/upload/MultiUploadPanel";
 import { AnalysisWorkspace } from "../components/analysis/AnalysisWorkspace";
+import { ComparisonWorkspace } from "../components/comparison/ComparisonWorkspace";
 import { DocumentToolbar } from "../components/library/DocumentToolbar";
 import { SearchBar } from "../components/library/SearchBar";
 import { FilterPanel } from "../components/library/FilterPanel";
@@ -59,6 +60,10 @@ export default function Home(): JSX.Element {
   const [libraryMessage, setLibraryMessage] = useState<string>("");
   const [selectedDocument, setSelectedDocument] = useState<LibraryDocument | null>(null);
   const [analysisFile, setAnalysisFile] = useState<File | null>(null);
+  const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
+  const [comparisonLoading, setComparisonLoading] = useState<boolean>(false);
+  const [comparisonError, setComparisonError] = useState<string | null>(null);
+  const [comparisonSelection, setComparisonSelection] = useState<LibraryDocument[]>([]);
 
   const mockActivities = [
     {
@@ -214,7 +219,14 @@ export default function Home(): JSX.Element {
         setLibraryMessage(`Opened analysis for ${targetDoc?.title ?? "the selected document"}.`);
         break;
       case "compare":
-        setLibraryMessage("Compare is not part of this workspace scope.");
+        setComparisonSelection((prev) => {
+          if (prev.some((doc) => doc.id === id)) {
+            return prev;
+          }
+          return [...prev, targetDoc ?? null].filter(Boolean) as LibraryDocument[];
+        });
+        setActiveTab("compare");
+        setLibraryMessage(`Added ${targetDoc?.title ?? "the selected document"} to the comparison workspace.`);
         break;
       case "literature-review":
         setLibraryMessage("Literature review is not part of this workspace scope.");
@@ -231,6 +243,54 @@ export default function Home(): JSX.Element {
       default:
         break;
     }
+  };
+
+  const handleCompareSelection = async () => {
+    if (comparisonSelection.length < 2) {
+      setComparisonError("Select at least two papers to compare.");
+      return;
+    }
+
+    setComparisonLoading(true);
+    setComparisonError(null);
+
+    try {
+      const response = await compareDocuments(comparisonSelection.map((doc) => doc.id));
+      setComparison(response);
+    } catch (err) {
+      setComparison(null);
+      setComparisonError(err instanceof Error ? err.message : "Something went wrong while comparing the papers.");
+    } finally {
+      setComparisonLoading(false);
+    }
+  };
+
+  const handleRemoveComparisonPaper = (id: string) => {
+    setComparisonSelection((prev) => prev.filter((doc) => doc.id !== id));
+  };
+
+  const handleMoveComparisonPaper = (id: string, direction: "up" | "down") => {
+    setComparisonSelection((prev) => {
+      const index = prev.findIndex((doc) => doc.id === id);
+      if (index < 0) {
+        return prev;
+      }
+
+      const next = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= next.length) {
+        return prev;
+      }
+
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      return next;
+    });
+  };
+
+  const handleResetComparison = () => {
+    setComparisonSelection([]);
+    setComparison(null);
+    setComparisonError(null);
   };
 
   return (
@@ -440,6 +500,25 @@ export default function Home(): JSX.Element {
         </div>
       )}
 
+      {activeTab === "compare" && (
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+          <div className="mx-auto w-full max-w-7xl">
+            <ComparisonWorkspace
+              selectedPapers={comparisonSelection}
+              onRemovePaper={handleRemoveComparisonPaper}
+              onMovePaper={handleMoveComparisonPaper}
+              onAddPaper={() => setActiveTab("library")}
+              onCompare={handleCompareSelection}
+              onReset={handleResetComparison}
+              onBackToLibrary={() => setActiveTab("library")}
+              comparison={comparison}
+              loading={comparisonLoading}
+              error={comparisonError}
+            />
+          </div>
+        </div>
+      )}
+
       {activeTab === "library" && (
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -498,7 +577,7 @@ export default function Home(): JSX.Element {
         </div>
       )}
 
-      {activeTab !== "dashboard" && activeTab !== "library" && activeTab !== "analyze" && (
+      {activeTab !== "dashboard" && activeTab !== "library" && activeTab !== "analyze" && activeTab !== "compare" && (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md w-full bg-surface border border-border rounded-large p-8 text-center shadow-card">
             <h2 className="text-heading-l font-bold text-text-primary mb-2">

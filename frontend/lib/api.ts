@@ -1,4 +1,4 @@
-import type { AnalysisResponse } from "../types/analysis";
+import type { AnalysisResponse, ComparisonResponse } from "../types/analysis";
 
 export async function analyzeResearchPaper(file: File): Promise<AnalysisResponse> {
   const formData = new FormData();
@@ -49,4 +49,23 @@ export async function ingestDocuments(files: File[]): Promise<BatchIngestionResp
   }
 
   return response.json() as Promise<BatchIngestionResponse>;
+}
+
+export async function compareDocuments(documentIds: string[]): Promise<ComparisonResponse> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+  const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/compare`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ document_ids: documentIds }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(errorBody?.detail ?? "Failed to compare the selected papers.");
+  }
+
+  return response.json() as Promise<ComparisonResponse>;
 }
