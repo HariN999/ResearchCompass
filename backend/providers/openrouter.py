@@ -20,6 +20,14 @@ class OpenRouterProvider(LLMProvider):
         self._timeout_seconds = timeout_seconds
         self._site_url = site_url
         self._app_name = app_name
+        self._client = httpx.Client(timeout=self._timeout_seconds)
+
+    def __del__(self) -> None:
+        try:
+            if hasattr(self, "_client") and self._client:
+                self._client.close()
+        except Exception:
+            pass
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         headers = {
@@ -33,22 +41,21 @@ class OpenRouterProvider(LLMProvider):
 
         logger.info("LLM request: sending generate request to OpenRouter model %s (input size: %d chars)", self._model, len(user_prompt))
         try:
-            with httpx.Client(timeout=self._timeout_seconds) as client:
-                response = client.post(
-                    "https://openrouter.ai/api/v1/chat/completions",
-                    headers=headers,
-                    json={
-                        "model": self._model,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt},
-                        ],
-                        "response_format": {"type": "json_object"},
-                        "temperature": 0.3,
-                    },
-                )
-                response.raise_for_status()
-                payload = response.json()
+            response = self._client.post(
+                "https://openrouter.ai/api/v1/chat/completions",
+                headers=headers,
+                json={
+                    "model": self._model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "response_format": {"type": "json_object"},
+                    "temperature": 0.3,
+                },
+            )
+            response.raise_for_status()
+            payload = response.json()
         except httpx.TimeoutException as exc:
             logger.error("OpenRouter request timed out after %s seconds for model %s", self._timeout_seconds, self._model)
             raise LLMProviderError(f"OpenRouter connection timed out: {self._model}") from exc
