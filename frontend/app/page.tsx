@@ -1,144 +1,22 @@
 "use client";
 
-import { useEffect, useMemo, useState } from "react";
-import { motion, AnimatePresence } from "framer-motion";
+import { useEffect, useState } from "react";
 
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
-import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
-import { analyzeResearchPaper, compareDocuments, generateLiteratureReview, ingestDocuments, fetchDocuments } from "../lib/api";
-import type { AnalysisResponse, ComparisonResponse, LiteratureReviewResponse, SemanticSearchResult } from "../types/analysis";
-import { AppShell } from "../components/layout/AppShell";
-import { HeroSection } from "../components/dashboard/HeroSection";
-import { QuickActionCard } from "../components/dashboard/QuickActionCard";
-import { StatisticCard } from "../components/dashboard/StatisticCard";
-import { RecentActivityList } from "../components/dashboard/RecentActivityList";
-import { EmptyState } from "../components/dashboard/EmptyState";
-import { MultiUploadPanel } from "../components/upload/MultiUploadPanel";
-import { AnalysisWorkspace } from "../components/analysis/AnalysisWorkspace";
-import { ComparisonWorkspace } from "../components/comparison/ComparisonWorkspace";
-import { LiteratureReviewWorkspace } from "../components/literature/LiteratureReviewWorkspace";
-import { SemanticSearchWorkspace } from "../components/semantic-search/SemanticSearchWorkspace";
-import { DocumentToolbar } from "../components/library/DocumentToolbar";
-import { SearchBar } from "../components/library/SearchBar";
-import { FilterPanel } from "../components/library/FilterPanel";
-import { DocumentGrid } from "../components/library/DocumentGrid";
-import { DocumentTable } from "../components/library/DocumentTable";
-import {
-  FileText,
-  Columns,
-  Sparkles,
-  Search,
-  Database,
-  Clock,
-  FolderOpen
-} from "lucide-react";
-import {
-  PLACEHOLDER_DOCUMENTS,
-  type LibraryDocument,
-  type LibraryFilters,
-  type ViewMode,
-} from "../components/library/library-types";
+import { AgentWorkflow } from "../components/AgentWorkflow";
+import { analyzeResearchPaper } from "../lib/api";
+import type { AnalysisResult } from "../types/analysis";
 
 export default function Home(): JSX.Element {
-  const [result, setResult] = useState<AnalysisResponse | null>(null);
+  const [result, setResult] = useState<AnalysisResult | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
   const [isDark, setIsDark] = useState<boolean>(true);
-  const [mounted, setMounted] = useState<boolean>(false);
-  const [activeTab, setActiveTab] = useState<string>("dashboard");
-  const [isEmptyDemo, setIsEmptyDemo] = useState<boolean>(false);
-  const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
-  const [viewMode, setViewMode] = useState<ViewMode>("grid");
-  const [libraryFilters, setLibraryFilters] = useState<LibraryFilters>({
-    search: "",
-    domain: "",
-    year: "",
-    author: "",
-  });
-  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
-  const [libraryDocuments, setLibraryDocuments] = useState<LibraryDocument[]>(PLACEHOLDER_DOCUMENTS);
-  const [libraryMessage, setLibraryMessage] = useState<string>("");
-  const [selectedDocument, setSelectedDocument] = useState<LibraryDocument | null>(null);
-  const [analysisFile, setAnalysisFile] = useState<File | null>(null);
-  const [comparison, setComparison] = useState<ComparisonResponse | null>(null);
-  const [comparisonLoading, setComparisonLoading] = useState<boolean>(false);
-  const [comparisonError, setComparisonError] = useState<string | null>(null);
-  const [comparisonSelection, setComparisonSelection] = useState<LibraryDocument[]>([]);
-  const [literatureReview, setLiteratureReview] = useState<LiteratureReviewResponse | null>(null);
-  const [literatureReviewLoading, setLiteratureReviewLoading] = useState<boolean>(false);
-  const [literatureReviewError, setLiteratureReviewError] = useState<string | null>(null);
-  const [literatureReviewSelection, setLiteratureReviewSelection] = useState<LibraryDocument[]>([]);
-  const [semanticSearchQuery, setSemanticSearchQuery] = useState<string>("");
-  const [semanticSearchResults, setSemanticSearchResults] = useState<SemanticSearchResult[]>([]);
-  const [semanticSearchLoading, setSemanticSearchLoading] = useState<boolean>(false);
-  const [semanticSearchError, setSemanticSearchError] = useState<string | null>(null);
-
-  const mockActivities = [
-    {
-      id: "act-1",
-      title: "Attention Is All You Need",
-      type: "analysis" as const,
-      timestamp: "2 hours ago",
-      detail: "Completed CS Deep-Critique. Publication readiness score: 92/100.",
-    },
-    {
-      id: "act-2",
-      title: "BERT vs GPT Architecture Trade-offs",
-      type: "comparison" as const,
-      timestamp: "5 hours ago",
-      detail: "Generated 2-document methodology comparison matrix.",
-    },
-    {
-      id: "act-3",
-      title: "Sparse Attention Mechanics",
-      type: "lit-review" as const,
-      timestamp: "Yesterday",
-      detail: "Synthesized 3-document related work literature review.",
-    },
-  ];
-
-  const getTabTitle = (tab: string) => {
-    switch (tab) {
-      case "dashboard":
-        return "Dashboard";
-      case "library":
-        return "Library";
-      case "analyze":
-        return "Analyze";
-      case "compare":
-        return "Compare";
-      case "literature-review":
-        return "Literature Review";
-      case "search":
-        return "Search";
-      case "about":
-        return "About";
-      case "github":
-        return "GitHub Repository";
-      default:
-        return "Dashboard";
-    }
-  };
-
-  const getBreadcrumbs = (tab: string) => {
-    return ["ResearchCompass", getTabTitle(tab)];
-  };
-
-  const loadLibrary = async () => {
-    try {
-      const docs = await fetchDocuments();
-      setLibraryDocuments(docs);
-    } catch (err) {
-      console.error("Failed to load library documents:", err);
-    }
-  };
 
   useEffect(() => {
-    setMounted(true);
     setIsDark(document.documentElement.classList.contains("dark"));
-    void loadLibrary();
   }, []);
 
   function toggleTheme(): void {
@@ -151,13 +29,11 @@ export default function Home(): JSX.Element {
   async function handleAnalyze(file: File): Promise<void> {
     setLoading(true);
     setError(null);
-    setAnalysisFile(file);
 
     try {
       const analysis = await analyzeResearchPaper(file);
       setResult(analysis);
       setAnalyzedFilename(file.name);
-      void loadLibrary();
     } catch (err) {
       setResult(null);
       setError(err instanceof Error ? err.message : "Something went wrong while analyzing the paper.");
@@ -166,612 +42,165 @@ export default function Home(): JSX.Element {
     }
   }
 
-  // Animation variants for Staggered Hero text
-  const heroVariants = {
-    hidden: { opacity: 0 },
-    show: {
-      opacity: 1,
-      transition: {
-        staggerChildren: 0.15,
-      },
-    },
-  };
-
-  const itemVariants = {
-    hidden: { opacity: 0, y: 20 },
-    show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } },
-  };
-
-  const filteredDocuments = useMemo(() => {
-    const normalizedSearch = libraryFilters.search.trim().toLowerCase();
-
-    return libraryDocuments.filter((doc) => {
-      const matchesSearch =
-        normalizedSearch.length === 0 ||
-        [doc.title, doc.authors, doc.domain, doc.fileName, doc.tags.join(" ")]
-          .join(" ")
-          .toLowerCase()
-          .includes(normalizedSearch);
-      const matchesDomain = !libraryFilters.domain || doc.domain === libraryFilters.domain;
-      const matchesYear = !libraryFilters.year || String(doc.year) === libraryFilters.year;
-      const matchesAuthor =
-        !libraryFilters.author || doc.authors.toLowerCase().includes(libraryFilters.author.toLowerCase());
-
-      return matchesSearch && matchesDomain && matchesYear && matchesAuthor;
-    });
-  }, [libraryDocuments, libraryFilters]);
-
-  const handleSelectDocument = (id: string) => {
-    const nextDocument = libraryDocuments.find((doc) => doc.id === id) ?? null;
-    setSelectedDocument(nextDocument);
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      if (next.has(id)) {
-        next.delete(id);
-      } else {
-        next.add(id);
-      }
-      return next;
-    });
-  };
-
-  const handleSelectAllDocuments = () => {
-    setSelectedIds((prev) => {
-      const next = new Set(prev);
-      const allVisibleSelected = filteredDocuments.length > 0 && filteredDocuments.every((doc) => next.has(doc.id));
-
-      if (allVisibleSelected) {
-        filteredDocuments.forEach((doc) => next.delete(doc.id));
-      } else {
-        filteredDocuments.forEach((doc) => next.add(doc.id));
-      }
-
-      return next;
-    });
-  };
-
-  const handleLibraryAction = (action: string, id: string) => {
-    const targetDoc = libraryDocuments.find((doc) => doc.id === id);
-
-    switch (action) {
-      case "analyze":
-        setSelectedDocument(targetDoc ?? null);
-        setActiveTab("analyze");
-        setLibraryMessage(`Opened analysis for ${targetDoc?.title ?? "the selected document"}.`);
-        break;
-      case "compare":
-        setComparisonSelection((prev) => {
-          if (prev.some((doc) => doc.id === id)) {
-            return prev;
-          }
-          return [...prev, targetDoc ?? null].filter(Boolean) as LibraryDocument[];
-        });
-        setActiveTab("compare");
-        setLibraryMessage(`Added ${targetDoc?.title ?? "the selected document"} to the comparison workspace.`);
-        break;
-      case "literature-review":
-        setLiteratureReviewSelection((prev) => {
-          if (prev.some((doc) => doc.id === id)) {
-            return prev;
-          }
-          return [...prev, targetDoc ?? null].filter(Boolean) as LibraryDocument[];
-        });
-        setActiveTab("literature-review");
-        setLibraryMessage(`Added ${targetDoc?.title ?? "the selected document"} to the literature review workspace.`);
-        break;
-      case "delete":
-        setLibraryDocuments((prev) => prev.filter((doc) => doc.id !== id));
-        setSelectedIds((prev) => {
-          const next = new Set(prev);
-          next.delete(id);
-          return next;
-        });
-        setLibraryMessage(`Removed ${targetDoc?.title ?? "the selected document"} from the library.`);
-        break;
-      default:
-        break;
-    }
-  };
-
-  const handleCompareSelection = async () => {
-    if (comparisonSelection.length < 2) {
-      setComparisonError("Select at least two papers to compare.");
-      return;
-    }
-
-    setComparisonLoading(true);
-    setComparisonError(null);
-
-    try {
-      const response = await compareDocuments(comparisonSelection.map((doc) => doc.id));
-      setComparison(response);
-    } catch (err) {
-      setComparison(null);
-      setComparisonError(err instanceof Error ? err.message : "Something went wrong while comparing the papers.");
-    } finally {
-      setComparisonLoading(false);
-    }
-  };
-
-  const handleRemoveComparisonPaper = (id: string) => {
-    setComparisonSelection((prev) => prev.filter((doc) => doc.id !== id));
-  };
-
-  const handleMoveComparisonPaper = (id: string, direction: "up" | "down") => {
-    setComparisonSelection((prev) => {
-      const index = prev.findIndex((doc) => doc.id === id);
-      if (index < 0) {
-        return prev;
-      }
-
-      const next = [...prev];
-      const targetIndex = direction === "up" ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= next.length) {
-        return prev;
-      }
-
-      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
-      return next;
-    });
-  };
-
-  const handleResetComparison = () => {
-    setComparisonSelection([]);
-    setComparison(null);
-    setComparisonError(null);
-  };
-
-  const handleGenerateLiteratureReview = async () => {
-    if (literatureReviewSelection.length < 2) {
-      setLiteratureReviewError("Select at least two papers to generate a literature review.");
-      return;
-    }
-
-    setLiteratureReviewLoading(true);
-    setLiteratureReviewError(null);
-
-    try {
-      const response = await generateLiteratureReview(literatureReviewSelection.map((doc) => doc.id));
-      setLiteratureReview(response);
-    } catch (err) {
-      setLiteratureReview(null);
-      setLiteratureReviewError(err instanceof Error ? err.message : "Something went wrong while generating the literature review.");
-    } finally {
-      setLiteratureReviewLoading(false);
-    }
-  };
-
-  const handleRemoveLiteraturePaper = (id: string) => {
-    setLiteratureReviewSelection((prev) => prev.filter((doc) => doc.id !== id));
-  };
-
-  const handleMoveLiteraturePaper = (id: string, direction: "up" | "down") => {
-    setLiteratureReviewSelection((prev) => {
-      const index = prev.findIndex((doc) => doc.id === id);
-      if (index < 0) {
-        return prev;
-      }
-
-      const next = [...prev];
-      const targetIndex = direction === "up" ? index - 1 : index + 1;
-      if (targetIndex < 0 || targetIndex >= next.length) {
-        return prev;
-      }
-
-      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
-      return next;
-    });
-  };
-
-  const handleResetLiteratureReview = () => {
-    setLiteratureReviewSelection([]);
-    setLiteratureReview(null);
-    setLiteratureReviewError(null);
-  };
-
-  const handleSemanticSearch = async (query: string) => {
-    const trimmedQuery = query.trim();
-    if (!trimmedQuery) {
-      setSemanticSearchResults([]);
-      setSemanticSearchError(null);
-      return;
-    }
-
-    setSemanticSearchLoading(true);
-    setSemanticSearchError(null);
-
-    try {
-      const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
-      const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/search`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({ query: trimmedQuery, top_k: 6 }),
-      });
-
-      if (!response.ok) {
-        const errorBody = await response.json().catch(() => null) as { detail?: string } | null;
-        throw new Error(errorBody?.detail ?? "Failed to search the indexed papers.");
-      }
-
-      const payload = await response.json();
-      const results = Array.isArray(payload?.results) ? payload.results : [];
-      setSemanticSearchResults(results as SemanticSearchResult[]);
-    } catch (err) {
-      setSemanticSearchResults([]);
-      setSemanticSearchError(err instanceof Error ? err.message : "Something went wrong while searching the library.");
-    } finally {
-      setSemanticSearchLoading(false);
-    }
-  };
-
-  const handleSemanticSearchClear = () => {
-    setSemanticSearchQuery("");
-    setSemanticSearchResults([]);
-    setSemanticSearchError(null);
-  };
-
-  const handleOpenSemanticAnalysis = (result: SemanticSearchResult) => {
-    setSelectedDocument({
-      id: result.document_id,
-      title: result.document_title,
-      authors: result.authors,
-      domain: result.metadata?.research_domain ? String(result.metadata.research_domain) : "Research",
-      year: typeof result.metadata?.publication_year === "number" ? result.metadata.publication_year : null,
-      uploadDate: "",
-      pageCount: 0,
-      wordCount: 0,
-      chunkCount: 0,
-      status: "indexed",
-      tags: [],
-      fileName: result.document_title,
-      fileSizeBytes: 0,
-    });
-    setActiveTab("analyze");
-    setLibraryMessage(`Opened analysis context for ${result.document_title}.`);
-  };
-
   return (
-    <AppShell
-      activeTab={activeTab}
-      onTabChange={setActiveTab}
-      title={getTabTitle(activeTab)}
-      breadcrumbs={getBreadcrumbs(activeTab)}
-    >
-      {activeTab === "dashboard" && (
-        <div className="relative z-10 w-full px-4 sm:px-6 py-6">
-          <AnimatePresence mode="wait">
-            
-            {/* LANDING HERO VIEW */}
-            {!result && !loading ? (
-              <div className="space-y-8 select-none">
-                
-                {/* Welcome Hero and Demo Toggle Row */}
-                <div className="flex flex-col md:flex-row md:items-start md:justify-between border-b border-border pb-6 gap-6">
-                  <HeroSection
-                    onPrimaryClick={() => setIsUploadOpen(true)}
-                    onSecondaryClick={() => setActiveTab("library")}
+    <main className="min-h-screen bg-white text-gray-900 transition-all duration-150 dark:bg-gray-950 dark:text-white">
+      {/* Navigation */}
+      <nav className="border-b border-gray-200 bg-white transition-all duration-150 dark:border-gray-800 dark:bg-gray-950">
+        <div className="mx-auto flex h-14 max-w-6xl items-center justify-between px-6">
+          <div className="text-sm font-semibold tracking-tight text-gray-900 dark:text-white flex items-center gap-2">
+            <span className="h-2.5 w-2.5 rounded-full bg-indigo-600 dark:bg-indigo-400" />
+            ResearchCompass
+          </div>
+
+          <div className="flex items-center gap-2">
+            <button
+              type="button"
+              onClick={toggleTheme}
+              className="rounded-md p-2 text-gray-400 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900 dark:hover:bg-gray-800 dark:hover:text-white"
+              aria-label={isDark ? "Switch to light mode" : "Switch to dark mode"}
+            >
+              {isDark ? (
+                <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <circle cx="12" cy="12" r="4" strokeWidth={1.5} />
+                  <path
+                    strokeLinecap="round"
+                    strokeWidth={1.5}
+                    d="M12 2.75v2M12 19.25v2M4.93 4.93l1.42 1.42M17.65 17.65l1.42 1.42M2.75 12h2M19.25 12h2M4.93 19.07l1.42-1.42M17.65 6.35l1.42-1.42"
                   />
-                  
-                  <button
-                    type="button"
-                    onClick={() => setIsEmptyDemo(!isEmptyDemo)}
-                    className="self-start px-3.5 py-1.5 text-caption font-semibold rounded-medium border border-border text-text-secondary bg-surface hover:bg-surface-hover hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
-                  >
-                    {isEmptyDemo ? "Show Populated Dashboard" : "Show Empty State Demo"}
-                  </button>
-                </div>
+                </svg>
+              ) : (
+                <svg className="h-[18px] w-[18px]" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true">
+                  <path
+                    strokeLinecap="round"
+                    strokeLinejoin="round"
+                    strokeWidth={1.5}
+                    d="M20.25 14.15A7.5 7.5 0 0 1 9.85 3.75 8.25 8.25 0 1 0 20.25 14.15Z"
+                  />
+                </svg>
+              )}
+            </button>
 
-                {isEmptyDemo ? (
-                  <EmptyState onActionClick={() => setIsUploadOpen(true)} />
-                ) : (
-                  <>
-                    {/* Platform Overview */}
-                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
-                      <StatisticCard label="Papers Indexed" value="12" icon={FolderOpen} change="+3 this week" />
-                      <StatisticCard label="Comparisons Generated" value="4" icon={Columns} change="+1 yesterday" />
-                      <StatisticCard label="Literature Reviews" value="2" icon={Sparkles} change="Active" changeType="neutral" />
-                      <StatisticCard label="Last Activity" value="2 hrs ago" icon={Clock} change="Completed" changeType="neutral" />
-                    </div>
-
-                    {/* Main Content Layout */}
-                    <div className="grid gap-8 grid-cols-1 lg:grid-cols-12">
-                      {/* Left: Quick Actions */}
-                      <div className="lg:col-span-5 flex flex-col gap-4">
-                        <h3 className="text-heading-m font-bold text-text-primary text-left">
-                          Research Workspaces
-                        </h3>
-                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1">
-                          <QuickActionCard
-                            icon={FileText}
-                            title="Analyze Paper"
-                            description="Run critique analysis and extract baselines on a new PDF."
-                            onClick={() => setIsUploadOpen(true)}
-                          />
-                          <QuickActionCard
-                            icon={Columns}
-                            title="Compare Papers"
-                            description="Build comparison matrices comparing methodology columns."
-                            onClick={() => setActiveTab("compare")}
-                          />
-                          <QuickActionCard
-                            icon={Sparkles}
-                            title="Literature Review"
-                            description="Draft synthesized Related Work markdown documents."
-                            onClick={() => setActiveTab("literature-review")}
-                          />
-                          <QuickActionCard
-                            icon={Search}
-                            title="Semantic Search"
-                            description="Query indexed paragraphs across libraries using NLP search."
-                            onClick={() => setActiveTab("search")}
-                          />
-                        </div>
-                      </div>
-
-                      {/* Right: Recent Activity */}
-                      <div className="lg:col-span-7">
-                        <RecentActivityList activities={mockActivities} />
-                      </div>
-                    </div>
-                  </>
-                )}
-
-                {/* Upload Modal Drawer */}
-                {isUploadOpen && (
-                  <div
-                    className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4"
-                    onClick={(e) => { if (e.target === e.currentTarget) setIsUploadOpen(false); }}
-                    role="dialog"
-                    aria-modal="true"
-                    aria-label="Upload research papers"
-                  >
-                    <div className="bg-surface border border-border rounded-large max-w-xl w-full p-6 shadow-dialog relative max-h-[85vh] overflow-y-auto">
-                      <button
-                        type="button"
-                        onClick={() => setIsUploadOpen(false)}
-                        className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-medium border border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary"
-                        aria-label="Close modal"
-                      >
-                        ✕
-                      </button>
-                      <h3 className="text-heading-m font-bold text-text-primary mb-1 text-left">
-                        Upload Research Papers
-                      </h3>
-                      <p className="text-small text-text-secondary mb-5 text-left">
-                        Select one or more PDF manuscripts for ingestion into the vector library.
-                      </p>
-                      <MultiUploadPanel
-                        onUpload={async (files) => {
-                          const response = await ingestDocuments(files);
-                          return response.results;
-                        }}
-                        onUploadComplete={() => {
-                          void loadLibrary();
-                          setLibraryMessage("Ingestion queue completed. Real-time document parsing is finalized.");
-                        }}
-                      />
-                    </div>
-                  </div>
-                )}
-
-              </div>
-            ) : null}
-
-            {/* LOADING STATE FOCUS VIEW */}
-            {loading && (
-              <motion.div
-                key="loading"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                exit={{ opacity: 0, y: -20 }}
-                className="max-w-4xl mx-auto py-8 text-center"
-              >
-                <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                  Research Review in Progress
-                </h2>
-                <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                  The analysis pipeline is evaluating your manuscript...
-                </p>
-                <AnalysisWorkflow loading={loading} />
-              </motion.div>
-            )}
-
-            {/* ERROR STATE */}
-            {error ? (
-              <motion.div
-                initial={{ opacity: 0 }}
-                animate={{ opacity: 1 }}
-                className="max-w-2xl mx-auto mt-6 rounded-lg border border-red-500/25 bg-red-50 dark:bg-red-950/20 p-4 text-left border-l-4 border-l-red-500 text-red-800 dark:text-red-400"
-              >
-                <p className="text-sm leading-6">{error}</p>
-              </motion.div>
-            ) : null}
-
-            {/* RESULTS VIEW */}
-            {result && !loading ? (
-              <motion.div
-                key="results"
-                initial={{ opacity: 0, y: 20 }}
-                animate={{ opacity: 1, y: 0 }}
-                className="mt-6 mb-24"
-              >
-                {/* Header info */}
-                <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 mb-8 border-b border-slate-200 dark:border-slate-800/80">
-                  <div>
-                    <h2 className="text-xl font-bold tracking-tight text-slate-900 dark:text-white">
-                      Manuscript Analysis Report
-                    </h2>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-                      Comprehensive review outcomes for {analyzedFilename}
-                    </p>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={() => { setResult(null); setError(null); }}
-                    className="inline-flex items-center gap-1.5 rounded-lg border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-3.5 py-1.5 text-xs font-semibold text-slate-600 dark:text-slate-300 transition-all duration-150 hover:bg-slate-50 dark:hover:bg-slate-900 hover:text-slate-900 dark:hover:text-white"
-                  >
-                    ← Analyze Another Paper
-                  </button>
-                </div>
-                <ResultsDashboard result={result} filename={analyzedFilename} />
-              </motion.div>
-            ) : null}
-            
-          </AnimatePresence>
-        </div>
-      )}
-
-      {activeTab === "analyze" && (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-          <div className="mx-auto w-full max-w-7xl">
-            <AnalysisWorkspace
-              document={selectedDocument}
-              result={result}
-              filename={analyzedFilename}
-              loading={loading}
-              error={error}
-              onAnalyze={handleAnalyze}
-              onRefresh={() => {
-                if (analysisFile) {
-                  void handleAnalyze(analysisFile);
-                }
-              }}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeTab === "compare" && (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-          <div className="mx-auto w-full max-w-7xl">
-            <ComparisonWorkspace
-              selectedPapers={comparisonSelection}
-              onRemovePaper={handleRemoveComparisonPaper}
-              onMovePaper={handleMoveComparisonPaper}
-              onAddPaper={() => setActiveTab("library")}
-              onCompare={handleCompareSelection}
-              onReset={handleResetComparison}
-              onBackToLibrary={() => setActiveTab("library")}
-              comparison={comparison}
-              loading={comparisonLoading}
-              error={comparisonError}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeTab === "literature-review" && (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-          <div className="mx-auto w-full max-w-7xl">
-            <LiteratureReviewWorkspace
-              selectedPapers={literatureReviewSelection}
-              onRemovePaper={handleRemoveLiteraturePaper}
-              onMovePaper={handleMoveLiteraturePaper}
-              onAddPaper={() => setActiveTab("library")}
-              onGenerate={handleGenerateLiteratureReview}
-              onReset={handleResetLiteratureReview}
-              onBackToLibrary={() => setActiveTab("library")}
-              review={literatureReview}
-              loading={literatureReviewLoading}
-              error={literatureReviewError}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeTab === "search" && (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-          <div className="mx-auto w-full max-w-7xl">
-            <SemanticSearchWorkspace
-              query={semanticSearchQuery}
-              results={semanticSearchResults}
-              loading={semanticSearchLoading}
-              error={semanticSearchError}
-              onQueryChange={setSemanticSearchQuery}
-              onSearch={handleSemanticSearch}
-              onClear={handleSemanticSearchClear}
-              onOpenAnalysis={handleOpenSemanticAnalysis}
-            />
-          </div>
-        </div>
-      )}
-
-      {activeTab === "library" && (
-        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
-          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
-            <DocumentToolbar
-              documentCount={libraryDocuments.length}
-              filteredCount={filteredDocuments.length}
-              viewMode={viewMode}
-              onViewModeChange={setViewMode}
-              onUpload={() => setIsUploadOpen(true)}
-              onRefresh={() => {
-                setLibraryFilters({ search: "", domain: "", year: "", author: "" });
-                setSelectedIds(new Set());
-                setLibraryMessage("Library refreshed from the current workspace.");
-                void loadLibrary();
-              }}
-            />
-
-            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
-              <SearchBar
-                value={libraryFilters.search}
-                onChange={(value) => setLibraryFilters((prev) => ({ ...prev, search: value }))}
-                className="lg:flex-1"
-              />
-              <FilterPanel filters={libraryFilters} onChange={setLibraryFilters} />
-            </div>
-
-            {libraryMessage ? (
-              <div className="rounded-medium border border-primary/20 bg-primary/5 px-3 py-2 text-small text-primary">
-                {libraryMessage}
-              </div>
-            ) : null}
-
-            {filteredDocuments.length === 0 ? (
-              <div className="rounded-large border border-dashed border-border bg-surface/70 p-8 text-center shadow-card">
-                <h3 className="text-heading-m font-semibold text-text-primary">No documents match your filters</h3>
-                <p className="mt-2 text-body text-text-secondary">
-                  Try broadening your search or clearing the active filters to see more papers.
-                </p>
-              </div>
-            ) : viewMode === "grid" ? (
-              <DocumentGrid
-                documents={filteredDocuments}
-                selectedIds={selectedIds}
-                onSelect={handleSelectDocument}
-                onAction={handleLibraryAction}
-              />
-            ) : (
-              <DocumentTable
-                documents={filteredDocuments}
-                selectedIds={selectedIds}
-                onSelect={handleSelectDocument}
-                onSelectAll={handleSelectAllDocuments}
-                onAction={handleLibraryAction}
-              />
-            )}
-          </div>
-        </div>
-      )}
-
-      {activeTab !== "dashboard" && activeTab !== "library" && activeTab !== "analyze" && activeTab !== "compare" && activeTab !== "literature-review" && (
-        <div className="flex-1 flex items-center justify-center p-6">
-          <div className="max-w-md w-full bg-surface border border-border rounded-large p-8 text-center shadow-card">
-            <h2 className="text-heading-l font-bold text-text-primary mb-2">
-              {getTabTitle(activeTab)}
-            </h2>
-            <p className="text-body text-text-secondary mb-6">
-              This module will be connected in an upcoming sprint. ResearchCompass v2 backend capabilities for this workspace are ready.
-            </p>
-            <span className="inline-flex items-center rounded-full bg-primary/10 text-primary border border-primary/20 px-3 py-1 text-caption font-semibold">
-              Planned for Release
+            <span className="rounded-md border border-gray-200 px-2 py-1 text-xs text-gray-400 dark:border-gray-800 dark:text-gray-500">
+              v1.1
             </span>
           </div>
         </div>
-      )}
-    </AppShell>
+      </nav>
+
+      {/* Main Body container */}
+      <div className="mx-auto max-w-6xl px-6 py-6 md:py-12">
+        
+        {/* LANDING HERO VIEW */}
+        {!result && !loading ? (
+          <div className="grid gap-12 md:grid-cols-[1fr_420px] items-center py-10 md:py-16 animate-fadeIn">
+            
+            {/* Left Column: Value Prop */}
+            <div className="text-left space-y-6">
+              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
+                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500" />
+                Academic Intelligence
+              </span>
+              
+              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl leading-[1.15] text-gray-900 dark:text-white">
+                Evaluate Research Gaps & <br />
+                <span className="bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-500">
+                  Accelerate Science
+                </span>
+              </h1>
+              
+              <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400 max-w-xl">
+                ResearchCompass runs your academic papers through a structured six-stage analysis workflow. Powered by <strong>Groq Cloud (llama-3.3-70b-versatile)</strong>, it critiques methodology baselines, identifies unaddressed limits, and computes publication readiness.
+              </p>
+
+              {/* Bullet Features list */}
+              <div className="space-y-3 pt-2">
+                {[
+                  "Domain Classification & Subfield Categorization",
+                  "Deep Methodology & Experimental baseline audits",
+                  "Exposing unaddressed weaknesses and research gaps",
+                  "Generating concrete code and implementation recommendations",
+                  "Ph.D. Thesis committee viva questions",
+                  "Verified publication readiness scorecard"
+                ].map((feat) => (
+                  <div key={feat} className="flex items-center gap-2.5 text-xs text-gray-600 dark:text-gray-400">
+                    <svg className="h-4 w-4 shrink-0 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
+                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
+                    </svg>
+                    <span>{feat}</span>
+                  </div>
+                ))}
+              </div>
+
+              {/* Integration Badges */}
+              <div className="flex flex-wrap items-center gap-2 pt-4">
+                <span className="inline-flex items-center rounded-md border border-gray-250 bg-gray-50/50 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
+                  Groq Cloud Layer
+                </span>
+                <span className="inline-flex items-center rounded-md border border-gray-255 bg-gray-50/50 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
+                  llama-3.3 deployment
+                </span>
+              </div>
+            </div>
+
+            {/* Right Column: Upload Card */}
+            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md dark:border-gray-800 dark:bg-gray-950/40">
+              <h3 className="text-sm font-bold text-gray-900 dark:text-white text-left">
+                Start Review Process
+              </h3>
+              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-left">
+                Select your draft manuscript in PDF format.
+              </p>
+              <UploadSection onAnalyze={handleAnalyze} loading={loading} />
+            </div>
+
+          </div>
+        ) : null}
+
+        {/* LOADING STATE FOCUS VIEW */}
+        {loading && (
+          <div className="max-w-4xl mx-auto py-12 text-center animate-fadeIn">
+            <h2 className="text-2xl font-bold tracking-tight text-gray-900 dark:text-white">
+              Agent Review In Progress
+            </h2>
+            <p className="mt-1.5 text-xs text-gray-500 dark:text-gray-400">
+              An agent is actively evaluating your research paper structure...
+            </p>
+            <AgentWorkflow loading={loading} />
+          </div>
+        )}
+
+        {/* ERROR STATE */}
+        {error ? (
+          <div className="max-w-2xl mx-auto mt-6 rounded-lg border border-red-200 bg-red-50 p-4 text-left dark:border-red-900 dark:bg-red-950/40">
+            <p className="text-sm leading-6 text-red-600 dark:text-red-350">{error}</p>
+          </div>
+        ) : null}
+
+        {/* RESULTS VIEW */}
+        {result && !loading ? (
+          <div className="animate-fadeIn mt-6 mb-24">
+            {/* Header info */}
+            <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between pb-6 mb-8 border-b border-gray-200 dark:border-gray-800">
+              <div>
+                <h2 className="text-xl font-bold tracking-tight text-gray-900 dark:text-white">
+                  Manuscript Analysis Report
+                </h2>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                  Comprehensive review outcomes for {analyzedFilename}
+                </p>
+              </div>
+              <button
+                type="button"
+                onClick={() => { setResult(null); setError(null); }}
+                className="inline-flex items-center gap-1.5 rounded-md border border-gray-200 px-3 py-1.5 text-xs font-semibold text-gray-600 transition-all duration-150 hover:bg-gray-100 hover:text-gray-900 dark:border-gray-800 dark:text-gray-450 dark:hover:bg-gray-900 dark:hover:text-white"
+              >
+                ← Analyze Another Paper
+              </button>
+            </div>
+            <ResultsDashboard result={result} filename={analyzedFilename} />
+          </div>
+        ) : null}
+      </div>
+    </main>
   );
 }
