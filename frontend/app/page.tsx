@@ -6,7 +6,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
 import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
-import { analyzeResearchPaper, compareDocuments, generateLiteratureReview, ingestDocuments } from "../lib/api";
+import { analyzeResearchPaper, compareDocuments, generateLiteratureReview, ingestDocuments, fetchDocuments } from "../lib/api";
 import type { AnalysisResponse, ComparisonResponse, LiteratureReviewResponse, SemanticSearchResult } from "../types/analysis";
 import { AppShell } from "../components/layout/AppShell";
 import { HeroSection } from "../components/dashboard/HeroSection";
@@ -126,9 +126,19 @@ export default function Home(): JSX.Element {
     return ["ResearchCompass", getTabTitle(tab)];
   };
 
+  const loadLibrary = async () => {
+    try {
+      const docs = await fetchDocuments();
+      setLibraryDocuments(docs);
+    } catch (err) {
+      console.error("Failed to load library documents:", err);
+    }
+  };
+
   useEffect(() => {
     setMounted(true);
     setIsDark(document.documentElement.classList.contains("dark"));
+    void loadLibrary();
   }, []);
 
   function toggleTheme(): void {
@@ -147,6 +157,7 @@ export default function Home(): JSX.Element {
       const analysis = await analyzeResearchPaper(file);
       setResult(analysis);
       setAnalyzedFilename(file.name);
+      void loadLibrary();
     } catch (err) {
       setResult(null);
       setError(err instanceof Error ? err.message : "Something went wrong while analyzing the paper.");
@@ -536,6 +547,10 @@ export default function Home(): JSX.Element {
                           const response = await ingestDocuments(files);
                           return response.results;
                         }}
+                        onUploadComplete={() => {
+                          void loadLibrary();
+                          setLibraryMessage("Ingestion queue completed. Real-time document parsing is finalized.");
+                        }}
                       />
                     </div>
                   </div>
@@ -696,6 +711,7 @@ export default function Home(): JSX.Element {
                 setLibraryFilters({ search: "", domain: "", year: "", author: "" });
                 setSelectedIds(new Set());
                 setLibraryMessage("Library refreshed from the current workspace.");
+                void loadLibrary();
               }}
             />
 

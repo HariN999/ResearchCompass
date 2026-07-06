@@ -63,3 +63,8 @@ class RetrievalService:
         logger.info("Semantic search completed in %.4f seconds. Results retrieved: %d", duration, len(results))
         return results
 
+    def list_documents(self) -> list[dict[str, Any]]:
+        logger.info("Retrieving all documents from VectorStore via RetrievalService")
+        return self._vector_store_service.list_documents()
+
+

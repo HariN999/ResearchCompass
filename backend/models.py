@@ -153,3 +153,41 @@ class LiteratureReviewResponse(BaseModel):
     open_challenges: str
     future_directions: str
     generated_literature_review: str
+
+
+class SemanticSearchRequest(BaseModel):
+    query: str
+    top_k: int = 5
+
+
+class SemanticSearchResult(BaseModel):
+    id: str
+    document_id: str
+    document_title: str
+    authors: str
+    section: str
+    page_number: int | None
+    score: float
+    text: str
+    metadata: dict[str, str | int | float | bool | None] = Field(default_factory=dict)
+
+
+class SemanticSearchResponse(BaseModel):
+    results: list[SemanticSearchResult]
+
+
+class LibraryDocument(BaseModel):
+    id: str
+    title: str
+    authors: str
+    domain: str
+    year: int | None = None
+    uploadDate: str
+    pageCount: int
+    wordCount: int
+    chunkCount: int
+    status: str  # "indexed" | "processing" | "failed"
+    tags: list[str]
+    fileName: str
+    fileSizeBytes: int
+

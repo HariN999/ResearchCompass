@@ -32,6 +32,10 @@ from models import (
     ComparisonResponse,
     LiteratureReviewRequest,
     LiteratureReviewResponse,
+    SemanticSearchRequest,
+    SemanticSearchResponse,
+    SemanticSearchResult,
+    LibraryDocument,
 )
 from services.analysis_service import AnalysisService
 from services.comparison_service import ComparisonService
@@ -257,4 +261,51 @@ async def generate_literature_review(
     except Exception as exc:
         logger.critical("Unexpected unhandled exception during literature-review request: %s", str(exc), exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
+
+
+@router.post("/search", response_model=SemanticSearchResponse)
+async def semantic_search(
+    request: SemanticSearchRequest,
+    retrieval_service: Annotated[RetrievalService, Depends(get_retrieval_service)],
+) -> SemanticSearchResponse:
+    logger.info("API request received: POST /api/search with query '%s'", request.query)
+    try:
+        chunks = retrieval_service.search(query=request.query, top_k=request.top_k)
+        results = []
+        for chunk in chunks:
+            meta = chunk.metadata or {}
+            results.append(
+                SemanticSearchResult(
+                    id=chunk.chunk_id,
+                    document_id=chunk.document_id,
+                    document_title=str(meta.get("document_title") or meta.get("file_name") or "Untitled Document"),
+                    authors=str(meta.get("authors") or "Unknown Author"),
+                    section=chunk.section,
+                    page_number=chunk.page_number,
+                    score=chunk.score,
+                    text=chunk.text,
+                    metadata=meta,
+                )
+            )
+        return SemanticSearchResponse(results=results)
+    except ValueError as exc:
+        logger.warning("Validation failure in search endpoint: %s", str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.critical("Unexpected unhandled exception during search request: %s", str(exc), exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
+
+
+@router.get("/documents", response_model=list[LibraryDocument])
+async def list_documents(
+    retrieval_service: Annotated[RetrievalService, Depends(get_retrieval_service)],
+) -> list[LibraryDocument]:
+    logger.info("API request received: GET /api/documents")
+    try:
+        docs = retrieval_service.list_documents()
+        return [LibraryDocument(**doc) for doc in docs]
+    except Exception as exc:
+        logger.critical("Unexpected unhandled exception during list_documents request: %s", str(exc), exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
+
 

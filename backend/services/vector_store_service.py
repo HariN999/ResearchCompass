@@ -172,3 +172,78 @@ class VectorStoreService:
             return 0.0
 
         return 1.0 / (1.0 + max(numeric_distance, 0.0))
+
+    def list_documents(self) -> list[dict[str, Any]]:
+        logger.info("Retrieving all documents listed in vector store collection")
+        try:
+            collection = self._get_collection()
+            # Retrieve all metadata from collection
+            result = collection.get(include=["metadatas"])
+            metadatas = result.get("metadatas") or []
+
+            # Group by document_id
+            docs = {}
+            from datetime import datetime, timezone
+            fallback_date = datetime.now(timezone.utc).strftime("%Y-%m-%d")
+
+            for meta in metadatas:
+                if not meta:
+                    continue
+                doc_id = meta.get("document_id")
+                if not doc_id:
+                    continue
+
+                # Check for research_domain, domain or section
+                domain = meta.get("research_domain") or meta.get("domain") or "Unknown"
+                year = meta.get("publication_year") or meta.get("year")
+                if year is not None:
+                    try:
+                        year = int(year)
+                    except (TypeError, ValueError):
+                        year = None
+
+                title = meta.get("document_title") or meta.get("file_name") or "Untitled Document"
+                authors = meta.get("authors") or "Unknown Author"
+                file_name = meta.get("file_name") or ""
+                created_at = meta.get("created_at") or fallback_date
+                # format created_at to YYYY-MM-DD
+                if "T" in created_at:
+                    created_at = created_at.split("T")[0]
+
+                if doc_id not in docs:
+                    docs[doc_id] = {
+                        "id": doc_id,
+                        "title": title,
+                        "authors": authors,
+                        "domain": domain,
+                        "year": year,
+                        "uploadDate": created_at,
+                        "pageCount": 0,
+                        "wordCount": 0,
+                        "chunkCount": 0,
+                        "status": "indexed",
+                        "tags": [],
+                        "fileName": file_name,
+                        "fileSizeBytes": int(meta.get("char_count") or 0) * 4,
+                    }
+                    tags = []
+                    if domain and domain != "Unknown":
+                        tags.append(domain)
+                    docs[doc_id]["tags"] = tags
+
+                # Update stats
+                doc = docs[doc_id]
+                doc["chunkCount"] += 1
+                doc["wordCount"] += int(meta.get("word_count") or 0)
+
+                page_end = int(meta.get("page_end") or 1)
+                page_start = int(meta.get("page_start") or 1)
+                max_p = max(page_end, page_start)
+                if max_p > doc["pageCount"]:
+                    doc["pageCount"] = max_p
+
+            return list(docs.values())
+        except Exception as exc:
+            logger.error("Failed to list documents from vector store: %s", str(exc), exc_info=True)
+            raise VectorStoreError("Failed to retrieve documents from the vector database.") from exc
+
