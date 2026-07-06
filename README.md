@@ -176,6 +176,50 @@ Open http://localhost:3000 in your browser.
 
 ---
 
+## Running with Docker
+
+The project can also be run with Docker Compose for local or deployment-style environments.
+
+### Prerequisites
+
+- Docker
+- Docker Compose
+
+### 1. Prepare environment files
+
+Create or update the backend environment file before starting the containers:
+
+```bash
+cp backend/.env.example backend/.env
+```
+
+Fill in the required values such as `GROQ_API_KEY` and `LLM_PROVIDER` in `backend/.env`.
+The frontend defaults to `http://localhost:8000`. For a remote deployment, set
+`NEXT_PUBLIC_API_URL` in your shell before building the image.
+
+### 2. Build and start the containers
+
+```bash
+docker compose up --build
+```
+
+To stop and remove the containers:
+
+```bash
+docker compose down
+```
+
+### 3. Access the app
+
+- Frontend: http://localhost:3000
+- Backend: http://localhost:8000
+
+### 4. Persistence
+
+ChromaDB data is stored in the Docker volume `backend_chroma`, which persists across container restarts. The backend writes its vector store to `/app/chroma` inside the container.
+
+---
+
 ## API reference
 
 ### POST /api/analyze
