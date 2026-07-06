@@ -42,16 +42,17 @@ class RetrievalDrivenPromptingTests(unittest.TestCase):
             ),
         ]
 
-        context = _assemble_rag_context(chunks)
+        context, used_ids = _assemble_rag_context(chunks)
 
         # Abstract (chunk_index: 1) should be first, and duplicate Introduction chunk should be removed
         expected_substrings = [
-            "[Section: Abstract] [Pages: 1]\nFirst text.",
-            "[Section: Introduction] [Pages: 2]\nSecond text.",
+            "[Chunk ID: chunk-1] [Section: Abstract] [Pages: 1]\nFirst text.",
+            "[Chunk ID: chunk-2] [Section: Introduction] [Pages: 2]\nSecond text.",
         ]
         
         self.assertIn(expected_substrings[0], context)
         self.assertIn(expected_substrings[1], context)
+        self.assertEqual(used_ids, ["chunk-1", "chunk-2"])
         
         # Verify logical order (Abstract is before Introduction)
         idx_abstract = context.find("Abstract")
@@ -82,10 +83,11 @@ class RetrievalDrivenPromptingTests(unittest.TestCase):
             ),
         ]
 
-        # max_chars set very small so only the first block fits
-        context = _assemble_rag_context(chunks, max_chars=40)
+        # max_chars set very small so only the first block fits (and is sliced)
+        context, used_ids = _assemble_rag_context(chunks, max_chars=40)
         self.assertIn("Abstract", context)
         self.assertNotIn("Second text content", context)
+        self.assertEqual(used_ids, ["chunk-1"])
 
 
 if __name__ == "__main__":

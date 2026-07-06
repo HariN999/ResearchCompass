@@ -30,6 +30,11 @@ Given the provided text from a research paper, you must perform a complete analy
 
 Be specific, technical, and actionable. Never write vague generic statements. Think and respond like a PhD supervisor reviewing a student submission.
 
+Grounding Rules:
+- Ground your analysis strictly in the provided paper context (which is presented as retrieved chunks labeled with Chunk ID, Section, and Pages).
+- Every claim, quote, or critique you write must rely directly on the retrieved evidence. Vigorously avoid unsupported statements.
+- If the provided context is insufficient to answer or analyze a specific part, indicate clearly in that JSON field that the evidence is insufficient.
+
 Respond ONLY in this exact JSON format with no extra text outside the JSON:
 {
   "research_domain": "string",

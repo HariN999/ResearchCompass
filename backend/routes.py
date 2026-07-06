@@ -27,7 +27,7 @@ from services.document_ingestion_service import DocumentIngestionService
 from services.retrieval_service import RetrievalService
 import time
 
-def _assemble_rag_context(chunks: list[RetrievedChunk], max_chars: int = 16000) -> str:
+def _assemble_rag_context(chunks: list[RetrievedChunk], max_chars: int = 16000) -> tuple[str, list[str]]:
     seen_ids = set()
     unique_chunks = []
     for chunk in chunks:
@@ -45,21 +45,24 @@ def _assemble_rag_context(chunks: list[RetrievedChunk], max_chars: int = 16000) 
     unique_chunks.sort(key=get_chunk_index)
 
     context_parts = []
+    used_chunk_ids = []
     current_char_count = 0
     for chunk in unique_chunks:
         section = chunk.metadata.get("section") or "Unknown"
         page_numbers = chunk.metadata.get("page_numbers") or ",".join(str(p) for p in chunk.page_numbers)
-        block = f"[Section: {section}] [Pages: {page_numbers}]\n{chunk.text}\n"
+        block = f"[Chunk ID: {chunk.chunk_id}] [Section: {section}] [Pages: {page_numbers}]\n{chunk.text}\n"
 
         if current_char_count + len(block) > max_chars:
             if not context_parts:
                 context_parts.append(block[:max_chars])
+                used_chunk_ids.append(chunk.chunk_id)
             break
 
         context_parts.append(block)
+        used_chunk_ids.append(chunk.chunk_id)
         current_char_count += len(block)
 
-    return "\n---\n".join(context_parts)
+    return "\n---\n".join(context_parts), used_chunk_ids
 
 logger = logging.getLogger(__name__)
 router = APIRouter()
@@ -98,15 +101,16 @@ async def analyze(
 
             if not chunks:
                 logger.warning("Retrieval returned 0 chunks for document %s. Using fallback.", document_id)
-                logger.info("Retrieval metrics - duration: %.4f seconds, count: 0, fallback: True", retrieval_duration)
+                logger.info("Retrieval metrics - duration: %.4f seconds, count: 0, fallback: True, evidence used: []", retrieval_duration)
                 analysis_input = ingestion_result.to_analysis_input()
             else:
+                analysis_input, used_chunk_ids = _assemble_rag_context(chunks)
                 logger.info(
-                    "Retrieval metrics - duration: %.4f seconds, count: %d, fallback: False",
+                    "Retrieval metrics - duration: %.4f seconds, count: %d, fallback: False, evidence used: %s",
                     retrieval_duration,
                     len(chunks),
+                    str(used_chunk_ids),
                 )
-                analysis_input = _assemble_rag_context(chunks)
         except Exception as exc:
             retrieval_duration = time.perf_counter() - retrieval_start
             logger.error(
@@ -115,7 +119,7 @@ async def analyze(
                 str(exc),
                 exc_info=True,
             )
-            logger.info("Retrieval metrics - duration: %.4f seconds, count: 0, fallback: True", retrieval_duration)
+            logger.info("Retrieval metrics - duration: %.4f seconds, count: 0, fallback: True, evidence used: []", retrieval_duration)
             analysis_input = ingestion_result.to_analysis_input()
 
         response = analysis_service.analyze_paper(analysis_input)
