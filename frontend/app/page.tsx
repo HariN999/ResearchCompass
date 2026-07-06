@@ -9,6 +9,20 @@ import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
 import { analyzeResearchPaper } from "../lib/api";
 import type { AnalysisResponse } from "../types/analysis";
 import { AppShell } from "../components/layout/AppShell";
+import { HeroSection } from "../components/dashboard/HeroSection";
+import { QuickActionCard } from "../components/dashboard/QuickActionCard";
+import { StatisticCard } from "../components/dashboard/StatisticCard";
+import { RecentActivityList } from "../components/dashboard/RecentActivityList";
+import { EmptyState } from "../components/dashboard/EmptyState";
+import {
+  FileText,
+  Columns,
+  Sparkles,
+  Search,
+  Database,
+  Clock,
+  FolderOpen
+} from "lucide-react";
 
 export default function Home(): JSX.Element {
   const [result, setResult] = useState<AnalysisResponse | null>(null);
@@ -18,6 +32,32 @@ export default function Home(): JSX.Element {
   const [isDark, setIsDark] = useState<boolean>(true);
   const [mounted, setMounted] = useState<boolean>(false);
   const [activeTab, setActiveTab] = useState<string>("dashboard");
+  const [isEmptyDemo, setIsEmptyDemo] = useState<boolean>(false);
+  const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
+
+  const mockActivities = [
+    {
+      id: "act-1",
+      title: "Attention Is All You Need",
+      type: "analysis" as const,
+      timestamp: "2 hours ago",
+      detail: "Completed CS Deep-Critique. Publication readiness score: 92/100.",
+    },
+    {
+      id: "act-2",
+      title: "BERT vs GPT Architecture Trade-offs",
+      type: "comparison" as const,
+      timestamp: "5 hours ago",
+      detail: "Generated 2-document methodology comparison matrix.",
+    },
+    {
+      id: "act-3",
+      title: "Sparse Attention Mechanics",
+      type: "lit-review" as const,
+      timestamp: "Yesterday",
+      detail: "Synthesized 3-document related work literature review.",
+    },
+  ];
 
   const getTabTitle = (tab: string) => {
     switch (tab) {
@@ -98,94 +138,114 @@ export default function Home(): JSX.Element {
       breadcrumbs={getBreadcrumbs(activeTab)}
     >
       {activeTab === "dashboard" && (
-        <div className="relative z-10 w-full px-4 sm:px-6 py-6 md:py-16">
+        <div className="relative z-10 w-full px-4 sm:px-6 py-6">
           <AnimatePresence mode="wait">
             
             {/* LANDING HERO VIEW */}
             {!result && !loading ? (
-              <motion.div
-                key="hero"
-                variants={heroVariants}
-                initial="hidden"
-                animate="show"
-                exit={{ opacity: 0, y: -20 }}
-                className="grid gap-8 grid-cols-1 lg:grid-cols-[1fr_400px] lg:gap-12 items-center py-6 lg:py-12"
-              >
+              <div className="space-y-8 select-none">
                 
-                {/* Left Column: Value Prop */}
-                <div className="text-left space-y-6">
-                  <motion.span
-                    variants={itemVariants}
-                    className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 shadow-[0_1px_3px_rgba(99,102,241,0.02)] dark:shadow-[0_0_15px_rgba(99,102,241,0.06)]"
-                  >
-                    <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500 dark:bg-indigo-400" />
-                    Open-source AI Research Intelligence
-                  </motion.span>
+                {/* Welcome Hero and Demo Toggle Row */}
+                <div className="flex flex-col md:flex-row md:items-start md:justify-between border-b border-border pb-6 gap-6">
+                  <HeroSection
+                    onPrimaryClick={() => setIsUploadOpen(true)}
+                    onSecondaryClick={() => setActiveTab("library")}
+                  />
                   
-                  <motion.h1
-                    variants={itemVariants}
-                    className="text-4xl font-extrabold tracking-tight sm:text-5xl leading-[1.15] text-slate-900 dark:text-white"
+                  <button
+                    type="button"
+                    onClick={() => setIsEmptyDemo(!isEmptyDemo)}
+                    className="self-start px-3.5 py-1.5 text-caption font-semibold rounded-medium border border-border text-text-secondary bg-surface hover:bg-surface-hover hover:text-text-primary transition-colors focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:ring-offset-2"
                   >
-                    Critique Research & <br />
-                    <span className="bg-gradient-to-r from-indigo-500 via-purple-500 to-pink-500 dark:from-indigo-400 dark:via-purple-400 dark:to-pink-500 bg-clip-text text-transparent">
-                      Accelerate Discovery
-                    </span>
-                  </motion.h1>
-                  
-                  <motion.p
-                    variants={itemVariants}
-                    className="text-sm leading-relaxed text-slate-600 dark:text-slate-400 max-w-xl"
-                  >
-                    ResearchCompass runs academic manuscripts through a structured review workflow. Powered by <strong>Groq</strong>, it audits methodologies, highlights research gaps, and calculates a publication-readiness score.
-                  </motion.p>
-
-                  {/* Bullet Features list */}
-                  <motion.div variants={itemVariants} className="space-y-3.5 pt-2">
-                    {[
-                      "CS Domain & subfield categorization",
-                      "Deep methodology & experimental baseline audits",
-                      "Exposing unaddressed weaknesses and research gaps",
-                      "Generating concrete code & implementation improvements",
-                      "Ph.D. Thesis committee defense viva questions",
-                      "Publication readiness scorecard with detailed justification"
-                    ].map((feat) => (
-                      <div key={feat} className="flex items-center gap-3 text-xs text-slate-600 dark:text-slate-300">
-                        <div className="flex h-4 w-4 shrink-0 items-center justify-center rounded-full bg-indigo-50 dark:bg-indigo-500/10 text-indigo-600 dark:text-indigo-400 border border-indigo-100 dark:border-indigo-500/20">
-                          <svg className="h-2.5 w-2.5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="4">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                          </svg>
-                        </div>
-                        <span>{feat}</span>
-                      </div>
-                    ))}
-                  </motion.div>
-
-                  {/* Integration Badges */}
-                  <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 pt-4">
-                    <span className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Open-source ready
-                    </span>
-                    <span className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                      Groq Llama 3.3
-                    </span>
-                  </motion.div>
+                    {isEmptyDemo ? "Show Populated Dashboard" : "Show Empty State Demo"}
+                  </button>
                 </div>
 
-                {/* Right Column: Upload Card */}
-                <motion.div
-                  variants={itemVariants}
-                  className="rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-6 shadow-sm dark:shadow-xl backdrop-blur-xl transition-all hover:border-indigo-500/30"
-                >
-                  <h3 className="text-sm font-bold text-slate-900 dark:text-white text-left">
-                    Start Review Process
-                  </h3>
-                  <p className="mt-1 text-xs text-slate-500 dark:text-slate-400 text-left">
-                    Select your draft manuscript in PDF format.
-                  </p>
-                  <UploadSection onAnalyze={handleAnalyze} loading={loading} />
-                </motion.div>
+                {isEmptyDemo ? (
+                  <EmptyState onActionClick={() => setIsUploadOpen(true)} />
+                ) : (
+                  <>
+                    {/* Platform Overview */}
+                    <div className="grid gap-6 grid-cols-1 sm:grid-cols-2 lg:grid-cols-4">
+                      <StatisticCard label="Papers Indexed" value="12" icon={FolderOpen} change="+3 this week" />
+                      <StatisticCard label="Comparisons Generated" value="4" icon={Columns} change="+1 yesterday" />
+                      <StatisticCard label="Literature Reviews" value="2" icon={Sparkles} change="Active" changeType="neutral" />
+                      <StatisticCard label="Last Activity" value="2 hrs ago" icon={Clock} change="Completed" changeType="neutral" />
+                    </div>
 
-              </motion.div>
+                    {/* Main Content Layout */}
+                    <div className="grid gap-8 grid-cols-1 lg:grid-cols-12">
+                      {/* Left: Quick Actions */}
+                      <div className="lg:col-span-5 flex flex-col gap-4">
+                        <h3 className="text-heading-m font-bold text-text-primary text-left">
+                          Research Workspaces
+                        </h3>
+                        <div className="grid gap-4 grid-cols-1 sm:grid-cols-2 lg:grid-cols-1">
+                          <QuickActionCard
+                            icon={FileText}
+                            title="Analyze Paper"
+                            description="Run critique analysis and extract baselines on a new PDF."
+                            onClick={() => setIsUploadOpen(true)}
+                          />
+                          <QuickActionCard
+                            icon={Columns}
+                            title="Compare Papers"
+                            description="Build comparison matrices comparing methodology columns."
+                            onClick={() => setActiveTab("compare")}
+                          />
+                          <QuickActionCard
+                            icon={Sparkles}
+                            title="Literature Review"
+                            description="Draft synthesized Related Work markdown documents."
+                            onClick={() => setActiveTab("literature-review")}
+                          />
+                          <QuickActionCard
+                            icon={Search}
+                            title="Semantic Search"
+                            description="Query indexed paragraphs across libraries using NLP search."
+                            onClick={() => setActiveTab("search")}
+                          />
+                        </div>
+                      </div>
+
+                      {/* Right: Recent Activity */}
+                      <div className="lg:col-span-7">
+                        <RecentActivityList activities={mockActivities} />
+                      </div>
+                    </div>
+                  </>
+                )}
+
+                {/* Upload Modal Drawer */}
+                {isUploadOpen && (
+                  <div className="fixed inset-0 bg-background/80 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+                    <div className="bg-surface border border-border rounded-large max-w-md w-full p-6 shadow-dialog relative">
+                      <button
+                        type="button"
+                        onClick={() => setIsUploadOpen(false)}
+                        className="absolute top-4 right-4 h-8 w-8 flex items-center justify-center rounded-medium border border-border text-text-secondary hover:bg-surface-hover hover:text-text-primary"
+                        aria-label="Close modal"
+                      >
+                        ✕
+                      </button>
+                      <h3 className="text-heading-m font-bold text-text-primary mb-1 text-left">
+                        Start Review Process
+                      </h3>
+                      <p className="text-small text-text-secondary mb-4 text-left">
+                        Select your draft manuscript in PDF format to run critique reviews.
+                      </p>
+                      <UploadSection
+                        onAnalyze={(file) => {
+                          setIsUploadOpen(false);
+                          handleAnalyze(file);
+                        }}
+                        loading={loading}
+                      />
+                    </div>
+                  </div>
+                )}
+
+              </div>
             ) : null}
 
             {/* LOADING STATE FOCUS VIEW */}
