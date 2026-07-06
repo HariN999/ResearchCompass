@@ -5,12 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
-import { AgentWorkflow } from "../components/AgentWorkflow";
+import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
 import { analyzeResearchPaper } from "../lib/api";
-import type { AnalysisResult } from "../types/analysis";
+import type { AnalysisResponse } from "../types/analysis";
 
 export default function Home(): JSX.Element {
-  const [result, setResult] = useState<AnalysisResult | null>(null);
+  const [result, setResult] = useState<AnalysisResponse | null>(null);
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
@@ -110,7 +110,7 @@ export default function Home(): JSX.Element {
             </button>
 
             <span className="rounded-md border border-slate-200 dark:border-slate-800 bg-slate-100 dark:bg-slate-900/60 px-2 py-0.5 text-xs text-slate-500 dark:text-slate-400">
-              v1.2
+              v1.0
             </span>
           </div>
         </div>
@@ -138,7 +138,7 @@ export default function Home(): JSX.Element {
                   className="inline-flex items-center gap-1.5 rounded-full border border-indigo-500/20 bg-indigo-50 dark:bg-indigo-500/10 px-3.5 py-1 text-xs font-semibold text-indigo-600 dark:text-indigo-400 shadow-[0_1px_3px_rgba(99,102,241,0.02)] dark:shadow-[0_0_15px_rgba(99,102,241,0.06)]"
                 >
                   <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500 dark:bg-indigo-400" />
-                  Microsoft Agents League Entry
+                  Open-source AI Research Intelligence
                 </motion.span>
                 
                 <motion.h1
@@ -155,7 +155,7 @@ export default function Home(): JSX.Element {
                   variants={itemVariants}
                   className="text-sm leading-relaxed text-slate-600 dark:text-slate-400 max-w-xl"
                 >
-                  ResearchCompass runs academic manuscripts through a structured six-stage review workflow. Powered by <strong>Microsoft Azure AI Foundry (o4-mini)</strong>, the agent audits methodologies, exposes hidden research gaps, and calculates readiness scoring.
+                  ResearchCompass runs academic manuscripts through a structured review workflow. Powered by <strong>Groq</strong>, it audits methodologies, highlights research gaps, and calculates a publication-readiness score.
                 </motion.p>
 
                 {/* Bullet Features list */}
@@ -182,10 +182,10 @@ export default function Home(): JSX.Element {
                 {/* Integration Badges */}
                 <motion.div variants={itemVariants} className="flex flex-wrap items-center gap-2 pt-4">
                   <span className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    Azure AI Foundry Layer
+                    Open-source ready
                   </span>
                   <span className="inline-flex items-center rounded-md border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900/40 px-2.5 py-1 text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase tracking-wider">
-                    o4-mini deployment
+                    Groq Llama 3.3
                   </span>
                 </motion.div>
               </div>
@@ -217,12 +217,12 @@ export default function Home(): JSX.Element {
               className="max-w-4xl mx-auto py-8 text-center"
             >
               <h2 className="text-2xl font-bold tracking-tight text-slate-900 dark:text-white">
-                Review Agent Executing
+                Research Review in Progress
               </h2>
               <p className="mt-1.5 text-xs text-slate-500 dark:text-slate-400">
-                An active reasoning trace is evaluating your PDF paper structure...
+                The analysis pipeline is evaluating your manuscript...
               </p>
-              <AgentWorkflow loading={loading} />
+              <AnalysisWorkflow loading={loading} />
             </motion.div>
           )}
 

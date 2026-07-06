@@ -6,10 +6,10 @@ import { LayoutDashboard, Cpu, AlertTriangle, GraduationCap, FileText, Calendar,
 
 import { ScoreCard } from "./ScoreCard";
 import { SectionBlock } from "./SectionBlock";
-import type { AnalysisResult } from "../types/analysis";
+import type { AnalysisResponse } from "../types/analysis";
 
 interface ResultsDashboardProps {
-  result: AnalysisResult;
+  result: AnalysisResponse;
   filename: string;
 }
 

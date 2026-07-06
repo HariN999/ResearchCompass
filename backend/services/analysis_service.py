@@ -1,15 +1,13 @@
 import json
-import os
-
-from groq import Groq
 
 from models import AnalysisResponse
+from providers.base import LLMProvider
 
 
 SYSTEM_PROMPT = """
 You are a senior AI research reviewer with deep expertise in computer science, NLP, machine learning, and interdisciplinary research. You critically and constructively evaluate academic research papers.
 
-Given the full text of a research paper, you must perform a complete analysis:
+Given the provided text from a research paper, you must perform a complete analysis:
 
 1. Identify the research domain and subfield precisely
 2. Write a detailed executive summary (3-4 sentences)
@@ -47,26 +45,14 @@ Respond ONLY in this exact JSON format with no extra text outside the JSON:
 """
 
 
-def analyze_paper(paper_text: str) -> AnalysisResponse:
-    client = Groq(api_key=os.environ["GROQ_API_KEY"])
+class AnalysisService:
+    def __init__(self, llm_provider: LLMProvider) -> None:
+        self._llm_provider = llm_provider
 
-    try:
-        response = client.chat.completions.create(
-            model="llama-3.3-70b-versatile",
-            messages=[
-                {"role": "system", "content": SYSTEM_PROMPT},
-                {"role": "user", "content": paper_text},
-            ],
-            response_format={"type": "json_object"},
-            temperature=0.3,
-        )
-
-        response_text = response.choices[0].message.content
-        if not response_text:
-            raise ValueError("Groq returned an empty response.")
-
-        parsed = json.loads(response_text)
-        return AnalysisResponse(**parsed)
-
-    except Exception as exc:
-        raise ValueError(f"Failed to analyze research paper: {exc}") from exc
+    def analyze_paper(self, paper_text: str) -> AnalysisResponse:
+        try:
+            response_text = self._llm_provider.generate(SYSTEM_PROMPT, paper_text)
+            parsed = json.loads(response_text)
+            return AnalysisResponse(**parsed)
+        except Exception as exc:
+            raise ValueError(f"Failed to analyze research paper: {exc}") from exc
