@@ -1,6 +1,6 @@
 # ResearchCompass
 
-A local document analysis tool that parses scientific papers, stores them in a vector database, and generates structured reviews.
+ResearchCompass is a local web app for reviewing scientific PDFs. It extracts text from uploaded papers, builds a local vector index, and uses an LLM to produce structured review output for methodology, strengths, weaknesses, and follow-up questions.
 
 [![Python FastAPI](https://img.shields.io/badge/Python-FastAPI-009688?logo=fastapi&logoColor=white)](https://fastapi.tiangolo.com)
 [![Next.js 15](https://img.shields.io/badge/Next.js-15-black?logo=next.dot.js&logoColor=white)](https://nextjs.org)
@@ -8,34 +8,34 @@ A local document analysis tool that parses scientific papers, stores them in a v
 [![Groq Cloud](https://img.shields.io/badge/Groq-llama--3.3--70b-orange)](https://groq.com)
 [![MIT License](https://img.shields.io/badge/License-MIT-green)](LICENSE)
 
-## Interface Overview & E2E Workflow
+## Interface Overview
 
-The application workflow is divided into three key stages: Ingestion, Processing, and Review Analysis.
+The app flow is straightforward: upload a PDF, process the document, index the content, and review the generated analysis.
 
-### 1. Landing & Manuscript Dropzone
-Users land on a clean, dual-column screen where they can drag and drop draft papers in PDF format.
+### 1. Landing screen
+Users can upload a PDF from the main page.
 ![Landing Page](docs/screenshots/Home.png)
 
-### 2. Manuscript Selection & Loading
-Once a file is selected, the "Run Analysis" controller triggers the ingestion pipeline.
+### 2. Upload and analysis trigger
+The selected file is sent to the backend for ingestion and analysis.
 ![Manuscript Selected](docs/screenshots/Upload.png)
 
-### 3. Live Ingestion Monitor
-Processing triggers real-time pipeline status logs detailing extraction, chunking, and embedding stages.
+### 3. Processing view
+The app shows the ingestion and retrieval pipeline stages while the document is being processed.
 ![Ingestion Processing](docs/screenshots/Processing.png)
 
-### 4. Structured Review Dashboard
-Once completed, the dashboard presents a structured analysis categorized into metadata insights, methodology audits, thesis viva defense questions, and a publication readiness score.
-![Results Dashboard](docs/screenshots/results.png)
+### 4. Results dashboard
+The final view summarizes methodology notes, weaknesses, gaps, and readiness feedback.
+![Results Dashboard](docs/screenshots/Results.png)
 
 ## Quick Demo
 
 ```text
 Upload PDF
     ↓
- Extract
+Extract
     ↓
-  Embed
+Embed
     ↓
 Retrieve
     ↓
@@ -46,221 +46,195 @@ Results
 
 ---
 
-## What is ResearchCompass?
+## What ResearchCompass does
 
-ResearchCompass is a self-hosted tool that helps researchers evaluate academic manuscripts. It extracts text from uploaded PDFs, segments the pages, indexes them in a local ChromaDB instance, and prompts Large Language Models (LLMs) to generate methodology audits, gap discovery reports, and thesis defense questions.
-
----
-
-## Why ResearchCompass?
-
-Researchers face an overwhelming volume of papers, and standard PDF readers do not highlights gaps or methodological limits. ResearchCompass solves this by automatically parsing double-column layouts, indexing document segments semantically, and running them through a structured critique template. This exposes constraints, extracts core baselines, and suggests concrete code-level improvements before peer review or thesis defense.
-
----
+The project combines a FastAPI backend, a Next.js frontend, and a local ChromaDB vector store. It is intended for researchers who want a structured review of a paper before they share it or prepare for a discussion.
 
 ## Features
 
-### Core Features
-*   **Structured PDF Parsing:** Extracts clean sequential text blocks from multi-column scientific layouts using PyMuPDF.
-*   **Ingestion Guardrails:** Restricts uploads to PDF files under 20MB and 200 pages to protect memory buffers.
-*   **Metadata Extraction:** Groups and displays documents by author, publishing year, and CS subfield domains.
+### Core workflow
+- PDF upload and validation
+- Text extraction from scientific papers
+- Chunking and indexing for retrieval
+- Structured critique generation
 
-### AI Features
-*   **Methodology Audits:** Analyzes baseline datasets, models, training procedures, and experimental settings.
-*   **Gaps & Weaknesses Detection:** Exposes unaddressed limits, sample size issues, and conceptual trade-offs.
-*   **Thesis Defense Preparation:** Generates 5 defense-level questions a review committee would ask about the paper.
-*   **Semantic Search & RAG:** Queries local document context using cosine similarity vectors before running LLM prompts to prevent hallucinations.
+### Included outputs
+- Methodology review
+- Strengths and weaknesses
+- Research gaps and novelty assessment
+- Viva-style questions
+- Publication readiness score
 
-### Engineering Features
-*   **Local Vector Indexing:** Stores document chunks and metadata persistently inside a local SQLite-backed ChromaDB collection.
-*   **LLM Provider Abstraction:** Implements a strategy pattern supporting switches between Groq, OpenRouter, and local Ollama runtimes.
-*   **Zero Framework Bloat:** Executes text chunking, embedding generation, and prompt assembly natively in standard Python without LangChain or LlamaIndex.
-*   **Isolated Testing:** Includes 49 unit and integration tests running against local in-memory databases with mocked network endpoints.
+### Engineering details
+- Local vector indexing with ChromaDB
+- LLM provider abstraction for Groq, OpenRouter, or Ollama
+- FastAPI routes with Pydantic response validation
+- Pytest coverage for the backend services
 
 ---
 
 ## Technology Stack
 
-| Component | Technology | Role / Purpose |
+| Component | Technology | Role |
 | :--- | :--- | :--- |
-| **Frontend** | Next.js 15 (React, TypeScript) | Layout organization, file upload triggers, terminal-style loader, results view |
-| **Backend** | Python (FastAPI, Uvicorn) | REST API routes, custom exception handlers, constructor dependency injection |
-| **Vector Index** | ChromaDB | Local SQL-backed persistent vector database |
-| **Embeddings** | SentenceTransformers | Local `BAAI/bge-small-en-v1.5` embeddings running on CPU/GPU |
-| **LLM Provider** | Groq, OpenRouter, Ollama | Completion engine running Llama-3.3-70b |
-| **Testing** | PyTest, PyTest-Asyncio | Automated mock-isolated test suites |
+| Frontend | Next.js 15 + React + TypeScript | App shell, upload flow, results UI |
+| Backend | Python + FastAPI | API routes, request handling, analysis orchestration |
+| Vector store | ChromaDB | Local document chunk indexing |
+| Embeddings | SentenceTransformers | Local embedding generation |
+| LLM providers | Groq, OpenRouter, Ollama | Completion generation |
+| Testing | Pytest + Pytest-Asyncio | Backend test coverage |
 
 ---
 
-## Project Structure
+## Project structure
 
-*   `backend/app.py`: FastAPI application bootstrapping, CORS middleware mounting, and route registration.
-*   `backend/routes.py`: API endpoints for document ingestion, semantic search, and structured reviews.
-*   `backend/config.py`: Global environment settings configuration utilizing Pydantic `BaseSettings`.
-*   `backend/dependencies.py`: Dependency injection container providing cached singleton services.
-*   `backend/models.py`: Pydantic input/output serialization contracts.
-*   `backend/providers/`: Vendor wrappers implementing the `LLMProvider` abstract strategy contract.
-*   `backend/services/`: Moduler services managing PDF parsing, chunking, embeddings, vector writes, and critiques.
-*   `frontend/app/`: Next.js page state router managing the split-landing layout.
-*   `frontend/components/`: Modular React components for upload dropzones, terminal workflow monitors, and results cards.
+- backend/app.py: FastAPI application setup and middleware
+- backend/routes.py: API endpoints for analyze, ingest, compare, literature review, and semantic search
+- backend/config.py: Environment-based configuration
+- backend/dependencies.py: Service wiring for the app
+- backend/models.py: Pydantic request and response models
+- backend/providers/: Provider implementations for supported LLM backends
+- backend/services/: PDF parsing, chunking, embedding, retrieval, and analysis services
+- frontend/app/: Next.js page-level state and workspace routing
+- frontend/components/: UI components for upload, workflow, and results views
 
 ---
 
-## System Architecture
-
-ResearchCompass is structured into decoupled layers, separating presentation logic from orchestration services and database management.
+## System architecture
 
 ```mermaid
 graph TD
-    User([User client]) -->|File Upload / Queries| Next[Next.js 15 Frontend Layer]
-    Next -->|HTTP Requests / JSON| FastAPI[FastAPI Router Layer]
-    
-    subgraph FastAPI Backend App
-        FastAPI -->|Constructor DI Injection| Ingestion[Document Ingestion Coordinator]
-        Ingestion -->|Local CPU/GPU Embeddings| Embed[Embedding Service]
-        Ingestion -->|Text Segmentation| Chunk[Chunking Service]
-        Ingestion -->|Context managers| PDF[PDF Parsing: PyMuPDF]
-        
-        Ingestion -->|Index Operations| Chroma[Vector Store Service]
-        FastAPI -->|Retrieve Context Chunks| Retrieve[Retrieval Service]
-        Retrieve -->|Similarity Lookup| Chroma
-        
-        FastAPI -->|Request Synthesis| Analyze[Analysis Service]
-        Analyze -->|Provider Factory Selection| LLMFactory[LLM Provider Factory]
-    end
-    
-    LLMFactory -->|Groq API| Groq[Groq llama-3.3-70b-versatile]
-    LLMFactory -->|OpenRouter API| OpenRouter[OpenRouter Endpoint]
-    LLMFactory -->|Local Server| Ollama[Local Ollama runtime]
-    
-    Chroma -->|SQLite Metadata Index| LocalDisk[(Local Disk)]
+    User([User]) -->|Upload PDF / query| Frontend[Next.js frontend]
+    Frontend -->|HTTP JSON| API[FastAPI routes]
+    API -->|Ingest and parse| Ingestion[Document ingestion service]
+    Ingestion -->|Text extraction| PDF[PyMuPDF]
+    Ingestion -->|Chunking| Chunking[Chunking service]
+    Ingestion -->|Embeddings| Embeddings[Embedding service]
+    Ingestion -->|Indexing| Chroma[ChromaDB vector store]
+    API -->|Retrieval| Retrieval[Retrieval service]
+    Retrieval -->|Similarity search| Chroma
+    API -->|LLM request| Provider[LLM provider factory]
+    Provider -->|Groq/OpenRouter/Ollama| Model[Hosted or local model]
 ```
-
-### Layer Responsibilities
-*   **FastAPI Router Layer (`routes.py`):** Acts as the entry gate, handling serialization, validating input objects, and converting domain exceptions to unified HTTP codes.
-*   **Service Layer (`services/`):** Coordinates pipeline execution. For example, `DocumentIngestionService` coordinates reading the file, chunking it, creating embeddings, and writing to ChromaDB.
-*   **Provider Layer (`providers/`):** Implements vendor-specific request layouts (Groq API, OpenRouter, Ollama) behind a single unified interface.
 
 ---
 
-## AI Ingestion & Retrieval Pipeline
-
-When a manuscript is uploaded, it runs through the following pipeline:
+## AI pipeline
 
 ```text
-[ Upload PDF ]
-      │
-      ▼
-[ Parse Pages ] ────► Extracts layout text using PyMuPDF (fitz)
-      │
-      ▼
-[ Segment Text ] ───► Chunks text into segments with overlapping word boundaries
-      │
-      ▼
-[ Embed Chunks ] ───► Generates vector representations using BGE-small-en-v1.5
-      │
-      ▼
-[ Store Index ] ────► Persists embeddings & metadata (document title, author) to ChromaDB
-      │
-      ▼
-[ Query Retrieval] ─► Performs similarity searches to gather context for questions
-      │
-      ▼
-[ LLM Generation ] ─► Prompts llama-3.3-70b-versatile with retrieved context blocks
-      │
-      ▼
-[ Return JSON ] ────► Validates response structures and serves structured data to client
+Upload PDF
+  ↓
+Parse pages
+  ↓
+Chunk text
+  ↓
+Generate embeddings
+  ↓
+Index chunks in ChromaDB
+  ↓
+Retrieve relevant context
+  ↓
+Generate structured review output
 ```
 
 ---
 
-## Local Setup
+## Local setup
 
 ### Prerequisites
-*   Python 3.10 or 3.11
-*   Node.js 18+
+- Python 3.10 or 3.11
+- Node.js 18+
 
-### 1. Backend Configuration
-Navigate to the backend directory, create a virtual environment, and install dependencies:
+### Backend
 ```bash
 cd backend
 python3.11 -m venv venv
 source venv/bin/activate
 pip install -r requirements.txt
-```
-
-Create a `.env` file copying the environment template:
-```bash
 cp .env.example .env
 ```
 
-Open the `.env` file and insert your Groq API key:
+Edit backend/.env and set values such as:
 ```env
-GROQ_API_KEY=gsk_your_actual_key_here
+GROQ_API_KEY=your_groq_api_key_here
 LLM_PROVIDER=groq
 ```
 
-Start the FastAPI application:
+Start the API:
 ```bash
 uvicorn app:app --reload --port 8000
 ```
 
-### 2. Frontend Configuration
-Navigate to the frontend directory and install dependencies:
+### Frontend
 ```bash
 cd ../frontend
 npm install
-```
-
-Start the development server:
-```bash
 npm run dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) in your web browser.
+Open http://localhost:3000 in your browser.
 
 ---
 
-## API Reference
+## API reference
 
-### `POST /api/analyze`
-*   **Purpose:** Ingests and parses a PDF, indexes its chunks, retrieves context segments, calls the critique prompt, and returns the review payload.
-*   **Request Format:** `multipart/form-data` with `file: UploadFile`.
-*   **Response Format:** `AnalysisResponse` JSON object containing `research_domain`, `executive_summary`, `methodology`, `viva_questions`, and `publication_readiness_score`.
+### POST /api/analyze
+- Purpose: ingests a PDF, indexes its content, retrieves context, and returns a structured analysis response.
+- Request: multipart/form-data with a PDF file.
+- Response: JSON matching the analysis schema.
 
-### `POST /api/search`
-*   **Purpose:** Vector similarity search across all indexed chunks in ChromaDB.
-*   **Request Format:** JSON `SemanticSearchRequest` with fields `query` (string) and `top_k` (integer).
-*   **Response Format:** `SemanticSearchResponse` containing a list of `SemanticSearchResult` objects with scores and raw context strings.
+Example response:
+```json
+{
+  "research_domain": "Computer Science",
+  "executive_summary": "The paper presents a compact transformer architecture for low-resource settings.",
+  "problem_statement": "The study addresses efficient long-context inference under constrained compute budgets.",
+  "methodology": "The authors compare several pruning strategies and evaluate them on standard benchmarks.",
+  "key_contributions": ["A smaller transformer variant", "A pruning-based training recipe"],
+  "strengths": ["Clear evaluation setup", "Practical engineering focus"],
+  "weaknesses": ["Limited ablation coverage", "No baseline on larger models"],
+  "research_gaps": ["Few results on multilingual transfer"],
+  "novelty_assessment": "The approach is incremental but practically useful.",
+  "implementation_improvements": ["Add more ablation studies", "Report inference latency"],
+  "future_work": ["Test on larger corpora", "Evaluate energy efficiency"],
+  "viva_questions": ["How does pruning affect robustness?"],
+  "publication_readiness_score": 74,
+  "publication_readiness_justification": "The work is promising but would benefit from stronger ablations and broader evaluation."
+}
+```
 
-### `GET /api/documents`
-*   **Purpose:** Lists all parsed manuscripts currently indexed in ChromaDB.
-*   **Response Format:** `list[LibraryDocument]` JSON array.
+### POST /api/search
+- Purpose: vector similarity search over indexed chunks.
+- Request: JSON with query and top_k.
+
+### GET /api/documents
+- Purpose: returns the currently indexed documents.
 
 ---
 
-## Engineering Decisions
+## Engineering decisions
 
-*   **FastAPI & Pydantic:** Selected over Flask or Django for async request loops and automatic OpenAPI schema validation. Pydantic handles type-safe request/response parsing natively.
-*   **ChromaDB Vector Store:** Used because it is a lightweight, local, SQLite-backed vector database, which avoids the need for external cluster setups.
-*   **Shared Constructor Dependency Injection:** Implemented in `dependencies.py` to coordinate singletons and resolve services at startup. This enables clean unit-test mocking and prevents reload overheads of the local SentenceTransformer models.
-*   **Native RAG Implementation (No LangChain/LlamaIndex):** Built in pure Python to eliminate third-party framework abstraction layers, optimize pipeline execution speeds, and maintain full control over the contextual prompt templates.
-*   **LLM Provider Strategy Pattern:** Decouples model calls from routing endpoints, allowing switches between local Ollama instances and cloud APIs without altering downstream code.
+- FastAPI and Pydantic provide type-safe request and response handling.
+- ChromaDB keeps the local vector store lightweight and easy to run without a separate service.
+- Dependency injection keeps service construction consistent for tests and local development.
+- The backend uses a provider abstraction so Groq, OpenRouter, and Ollama can be swapped without changing the rest of the pipeline.
 
 ---
 
-## Future Work
+## Future work
 
-*   **Asynchronous Processing:** Move PDF parsing and index tasks to background workers (e.g., Celery/Redis) to prevent long-running tasks from blocking the web threads.
-*   **Token Response Streaming:** Support HTTP streaming chunks to lower user time-to-first-token latency.
-*   **Interactive Citations:** Link extracted snippets in the dashboard back to page coordinates inside the PDF viewer.
+- Add background processing for large uploads.
+- Add richer citation and evidence linking in the UI.
+- Add more automated evaluation for generated reviews.
 
 ---
 
 ## Contributing
-Contributions are welcome. Please open an issue to discuss proposed changes before submitting a pull request.
+
+Contributions are welcome. Please open an issue before proposing larger changes.
 
 ---
 
 ## License
+
 Distributed under the MIT License. See [LICENSE](LICENSE) for details.

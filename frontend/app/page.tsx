@@ -5,6 +5,7 @@ import { useEffect, useState } from "react";
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
 import { AgentWorkflow } from "../components/AgentWorkflow";
+import { LiteratureReviewWorkspace } from "../components/LiteratureReviewWorkspace";
 import { analyzeResearchPaper } from "../lib/api";
 import type { AnalysisResult } from "../types/analysis";
 
@@ -13,6 +14,7 @@ export default function Home(): JSX.Element {
   const [loading, setLoading] = useState<boolean>(false);
   const [error, setError] = useState<string | null>(null);
   const [analyzedFilename, setAnalyzedFilename] = useState<string>("");
+  const [activeView, setActiveView] = useState<"analyze" | "literature">("analyze");
   const [isDark, setIsDark] = useState<boolean>(true);
 
   useEffect(() => {
@@ -53,6 +55,23 @@ export default function Home(): JSX.Element {
           </div>
 
           <div className="flex items-center gap-2">
+            <div className="rounded-full border border-gray-200 bg-gray-50 p-1 dark:border-gray-800 dark:bg-gray-900/60">
+              <button
+                type="button"
+                onClick={() => setActiveView("analyze")}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${activeView === "analyze" ? "bg-indigo-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+              >
+                Analyze
+              </button>
+              <button
+                type="button"
+                onClick={() => setActiveView("literature")}
+                className={`rounded-full px-3 py-1.5 text-xs font-semibold transition ${activeView === "literature" ? "bg-indigo-600 text-white" : "text-gray-600 dark:text-gray-300"}`}
+              >
+                Literature review
+              </button>
+            </div>
+
             <button
               type="button"
               onClick={toggleTheme}
@@ -89,7 +108,10 @@ export default function Home(): JSX.Element {
 
       {/* Main Body container */}
       <div className="mx-auto max-w-6xl px-6 py-6 md:py-12">
-        
+        {activeView === "literature" ? (
+          <LiteratureReviewWorkspace />
+        ) : (
+          <>
         {/* LANDING HERO VIEW */}
         {!result && !loading ? (
           <div className="grid gap-12 md:grid-cols-[1fr_420px] items-center py-10 md:py-16 animate-fadeIn">
@@ -200,6 +222,8 @@ export default function Home(): JSX.Element {
             <ResultsDashboard result={result} filename={analyzedFilename} />
           </div>
         ) : null}
+          </>
+        )}
       </div>
     </main>
   );
