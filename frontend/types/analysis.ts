@@ -14,3 +14,14 @@ export interface AnalysisResponse {
   publication_readiness_score: number;
   publication_readiness_justification: string;
 }
+
+export interface ComparisonResponse {
+  executive_comparison: string;
+  similarities: string;
+  differences: string;
+  methodology_comparison: string;
+  dataset_comparison: string;
+  strength_comparison: string;
+  weakness_comparison: string;
+  overall_recommendation: string;
+}
