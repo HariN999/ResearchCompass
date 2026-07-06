@@ -37,3 +37,15 @@ export interface LiteratureReviewResponse {
   future_directions: string;
   generated_literature_review: string;
 }
+
+export interface SemanticSearchResult {
+  id: string;
+  document_id: string;
+  document_title: string;
+  authors: string;
+  section: string;
+  page_number: number | null;
+  score: number;
+  text: string;
+  metadata?: Record<string, string | number | boolean | null | undefined>;
+}
