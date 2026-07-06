@@ -1,6 +1,6 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 
 import { ResultsDashboard } from "../components/ResultsDashboard";
@@ -15,6 +15,11 @@ import { StatisticCard } from "../components/dashboard/StatisticCard";
 import { RecentActivityList } from "../components/dashboard/RecentActivityList";
 import { EmptyState } from "../components/dashboard/EmptyState";
 import { MultiUploadPanel } from "../components/upload/MultiUploadPanel";
+import { DocumentToolbar } from "../components/library/DocumentToolbar";
+import { SearchBar } from "../components/library/SearchBar";
+import { FilterPanel } from "../components/library/FilterPanel";
+import { DocumentGrid } from "../components/library/DocumentGrid";
+import { DocumentTable } from "../components/library/DocumentTable";
 import {
   FileText,
   Columns,
@@ -24,6 +29,12 @@ import {
   Clock,
   FolderOpen
 } from "lucide-react";
+import {
+  PLACEHOLDER_DOCUMENTS,
+  type LibraryDocument,
+  type LibraryFilters,
+  type ViewMode,
+} from "../components/library/library-types";
 
 export default function Home(): JSX.Element {
   const [result, setResult] = useState<AnalysisResponse | null>(null);
@@ -35,6 +46,16 @@ export default function Home(): JSX.Element {
   const [activeTab, setActiveTab] = useState<string>("dashboard");
   const [isEmptyDemo, setIsEmptyDemo] = useState<boolean>(false);
   const [isUploadOpen, setIsUploadOpen] = useState<boolean>(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("grid");
+  const [libraryFilters, setLibraryFilters] = useState<LibraryFilters>({
+    search: "",
+    domain: "",
+    year: "",
+    author: "",
+  });
+  const [selectedIds, setSelectedIds] = useState<Set<string>>(new Set());
+  const [libraryDocuments, setLibraryDocuments] = useState<LibraryDocument[]>(PLACEHOLDER_DOCUMENTS);
+  const [libraryMessage, setLibraryMessage] = useState<string>("");
 
   const mockActivities = [
     {
@@ -129,6 +150,82 @@ export default function Home(): JSX.Element {
   const itemVariants = {
     hidden: { opacity: 0, y: 20 },
     show: { opacity: 1, y: 0, transition: { type: "spring" as const, stiffness: 100 } },
+  };
+
+  const filteredDocuments = useMemo(() => {
+    const normalizedSearch = libraryFilters.search.trim().toLowerCase();
+
+    return libraryDocuments.filter((doc) => {
+      const matchesSearch =
+        normalizedSearch.length === 0 ||
+        [doc.title, doc.authors, doc.domain, doc.fileName, doc.tags.join(" ")]
+          .join(" ")
+          .toLowerCase()
+          .includes(normalizedSearch);
+      const matchesDomain = !libraryFilters.domain || doc.domain === libraryFilters.domain;
+      const matchesYear = !libraryFilters.year || String(doc.year) === libraryFilters.year;
+      const matchesAuthor =
+        !libraryFilters.author || doc.authors.toLowerCase().includes(libraryFilters.author.toLowerCase());
+
+      return matchesSearch && matchesDomain && matchesYear && matchesAuthor;
+    });
+  }, [libraryDocuments, libraryFilters]);
+
+  const handleSelectDocument = (id: string) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) {
+        next.delete(id);
+      } else {
+        next.add(id);
+      }
+      return next;
+    });
+  };
+
+  const handleSelectAllDocuments = () => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      const allVisibleSelected = filteredDocuments.length > 0 && filteredDocuments.every((doc) => next.has(doc.id));
+
+      if (allVisibleSelected) {
+        filteredDocuments.forEach((doc) => next.delete(doc.id));
+      } else {
+        filteredDocuments.forEach((doc) => next.add(doc.id));
+      }
+
+      return next;
+    });
+  };
+
+  const handleLibraryAction = (action: string, id: string) => {
+    const targetDoc = libraryDocuments.find((doc) => doc.id === id);
+
+    switch (action) {
+      case "analyze":
+        setActiveTab("analyze");
+        setLibraryMessage(`Opened analysis for ${targetDoc?.title ?? "the selected document"}.`);
+        break;
+      case "compare":
+        setActiveTab("compare");
+        setLibraryMessage(`Prepared a comparison for ${targetDoc?.title ?? "the selected document"}.`);
+        break;
+      case "literature-review":
+        setActiveTab("literature-review");
+        setLibraryMessage(`Opened literature review for ${targetDoc?.title ?? "the selected document"}.`);
+        break;
+      case "delete":
+        setLibraryDocuments((prev) => prev.filter((doc) => doc.id !== id));
+        setSelectedIds((prev) => {
+          const next = new Set(prev);
+          next.delete(id);
+          return next;
+        });
+        setLibraryMessage(`Removed ${targetDoc?.title ?? "the selected document"} from the library.`);
+        break;
+      default:
+        break;
+    }
   };
 
   return (
@@ -318,7 +415,65 @@ export default function Home(): JSX.Element {
         </div>
       )}
 
-      {activeTab !== "dashboard" && (
+      {activeTab === "library" && (
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+          <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
+            <DocumentToolbar
+              documentCount={libraryDocuments.length}
+              filteredCount={filteredDocuments.length}
+              viewMode={viewMode}
+              onViewModeChange={setViewMode}
+              onUpload={() => setIsUploadOpen(true)}
+              onRefresh={() => {
+                setLibraryFilters({ search: "", domain: "", year: "", author: "" });
+                setSelectedIds(new Set());
+                setLibraryMessage("Library refreshed from the current workspace.");
+              }}
+            />
+
+            <div className="flex flex-col gap-3 lg:flex-row lg:items-center lg:justify-between">
+              <SearchBar
+                value={libraryFilters.search}
+                onChange={(value) => setLibraryFilters((prev) => ({ ...prev, search: value }))}
+                className="lg:flex-1"
+              />
+              <FilterPanel filters={libraryFilters} onChange={setLibraryFilters} />
+            </div>
+
+            {libraryMessage ? (
+              <div className="rounded-medium border border-primary/20 bg-primary/5 px-3 py-2 text-small text-primary">
+                {libraryMessage}
+              </div>
+            ) : null}
+
+            {filteredDocuments.length === 0 ? (
+              <div className="rounded-large border border-dashed border-border bg-surface/70 p-8 text-center shadow-card">
+                <h3 className="text-heading-m font-semibold text-text-primary">No documents match your filters</h3>
+                <p className="mt-2 text-body text-text-secondary">
+                  Try broadening your search or clearing the active filters to see more papers.
+                </p>
+              </div>
+            ) : viewMode === "grid" ? (
+              <DocumentGrid
+                documents={filteredDocuments}
+                selectedIds={selectedIds}
+                onSelect={handleSelectDocument}
+                onAction={handleLibraryAction}
+              />
+            ) : (
+              <DocumentTable
+                documents={filteredDocuments}
+                selectedIds={selectedIds}
+                onSelect={handleSelectDocument}
+                onSelectAll={handleSelectAllDocuments}
+                onAction={handleLibraryAction}
+              />
+            )}
+          </div>
+        </div>
+      )}
+
+      {activeTab !== "dashboard" && activeTab !== "library" && (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md w-full bg-surface border border-border rounded-large p-8 text-center shadow-card">
             <h2 className="text-heading-l font-bold text-text-primary mb-2">
