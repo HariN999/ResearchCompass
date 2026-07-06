@@ -156,6 +156,8 @@ class VectorStoreService:
             "page_numbers": ",".join(str(page_number) for page_number in chunk.page_numbers),
             "char_count": chunk.char_count,
             "word_count": chunk.word_count,
+            "detected_section": chunk.detected_section,
+            "page_number": chunk.page_number,
         }
 
     def _page_numbers_from_metadata(
