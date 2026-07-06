@@ -11,26 +11,33 @@ class OllamaProvider(LLMProvider):
         self._base_url = base_url.rstrip("/")
         self._model = model
         self._timeout_seconds = timeout_seconds
+        self._client = httpx.Client(timeout=self._timeout_seconds)
+
+    def __del__(self) -> None:
+        try:
+            if hasattr(self, "_client") and self._client:
+                self._client.close()
+        except Exception:
+            pass
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         logger.info("LLM request: sending generate request to Ollama model %s (input size: %d chars)", self._model, len(user_prompt))
         try:
-            with httpx.Client(timeout=self._timeout_seconds) as client:
-                response = client.post(
-                    f"{self._base_url}/api/chat",
-                    json={
-                        "model": self._model,
-                        "messages": [
-                            {"role": "system", "content": system_prompt},
-                            {"role": "user", "content": user_prompt},
-                        ],
-                        "format": "json",
-                        "stream": False,
-                        "options": {"temperature": 0.3},
-                    },
-                )
-                response.raise_for_status()
-                payload = response.json()
+            response = self._client.post(
+                f"{self._base_url}/api/chat",
+                json={
+                    "model": self._model,
+                    "messages": [
+                        {"role": "system", "content": system_prompt},
+                        {"role": "user", "content": user_prompt},
+                    ],
+                    "format": "json",
+                    "stream": False,
+                    "options": {"temperature": 0.3},
+                },
+            )
+            response.raise_for_status()
+            payload = response.json()
         except httpx.TimeoutException as exc:
             logger.error("Ollama connection timed out after %s seconds for model %s", self._timeout_seconds, self._model)
             raise LLMProviderError(f"Ollama connection timed out: {self._model}") from exc
