@@ -4,6 +4,7 @@ from config import settings
 from providers.factory import create_llm_provider
 from services.analysis_service import AnalysisService
 from services.comparison_service import ComparisonService
+from services.literature_review_service import LiteratureReviewService
 from services.document_ingestion_service import DocumentIngestionService
 from services.embedding_service import EmbeddingService
 from services.retrieval_service import RetrievalService
@@ -45,6 +46,14 @@ def get_retrieval_service() -> RetrievalService:
 @lru_cache
 def get_comparison_service() -> ComparisonService:
     return ComparisonService(
+        retrieval_service=get_retrieval_service(),
+        llm_provider=create_llm_provider(),
+    )
+
+
+@lru_cache
+def get_literature_review_service() -> LiteratureReviewService:
+    return LiteratureReviewService(
         retrieval_service=get_retrieval_service(),
         llm_provider=create_llm_provider(),
     )

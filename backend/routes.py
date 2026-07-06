@@ -8,6 +8,7 @@ from dependencies import (
     get_document_ingestion_service,
     get_retrieval_service,
     get_comparison_service,
+    get_literature_review_service,
 )
 from exceptions import (
     AnalysisError,
@@ -29,9 +30,12 @@ from models import (
     BatchIngestionResponse,
     ComparisonRequest,
     ComparisonResponse,
+    LiteratureReviewRequest,
+    LiteratureReviewResponse,
 )
 from services.analysis_service import AnalysisService
 from services.comparison_service import ComparisonService
+from services.literature_review_service import LiteratureReviewService
 from services.document_ingestion_service import DocumentIngestionService
 from services.retrieval_service import RetrievalService
 import time
@@ -231,5 +235,26 @@ async def compare_documents(
         raise HTTPException(status_code=502, detail=str(exc)) from exc
     except Exception as exc:
         logger.critical("Unexpected unhandled exception during compare request: %s", str(exc), exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
+
+
+@router.post("/literature-review", response_model=LiteratureReviewResponse)
+async def generate_literature_review(
+    request: LiteratureReviewRequest,
+    review_service: Annotated[LiteratureReviewService, Depends(get_literature_review_service)],
+) -> LiteratureReviewResponse:
+    logger.info("API request received: POST /api/literature-review for %d documents", len(request.document_ids))
+    try:
+        response = review_service.generate_review(request.document_ids)
+        logger.info("API request successfully completed: POST /api/literature-review")
+        return response
+    except ValueError as exc:
+        logger.warning("Validation failure in literature-review endpoint: %s", str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (AnalysisError, LLMProviderError, InvalidLLMResponseError) as exc:
+        logger.error("Literature review generation failed: %s", str(exc), exc_info=True)
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.critical("Unexpected unhandled exception during literature-review request: %s", str(exc), exc_info=True)
         raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
 
