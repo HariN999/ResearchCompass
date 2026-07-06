@@ -27,6 +27,13 @@ class Settings:
         self.ollama_base_url = os.getenv("OLLAMA_BASE_URL", "http://localhost:11434").strip()
         self.ollama_model = os.getenv("OLLAMA_MODEL", "llama3.1:8b").strip()
 
+        self.cors_allowed_origins: list[str] = []
+        raw_origins = os.getenv("CORS_ALLOWED_ORIGINS", "")
+        if raw_origins:
+            self.cors_allowed_origins = [org.strip() for org in raw_origins.split(",") if org.strip()]
+        else:
+            self.cors_allowed_origins = ["http://localhost:3000"]
+
     def validate(self) -> None:
         # 1. Validate LLM_PROVIDER
         if self.llm_provider not in SUPPORTED_PROVIDERS:
@@ -84,6 +91,10 @@ class Settings:
                 self.retrieval_top_k = top_k
             except ValueError:
                 raise ValueError(f"RETRIEVAL_TOP_K must be a positive integer, got '{raw_top_k}'.")
+
+        for origin in self.cors_allowed_origins:
+            if origin != "*" and not (origin.startswith("http://") or origin.startswith("https://")):
+                raise ValueError(f"Invalid CORS origin: '{origin}'. Must start with http://, https://, or be '*'.")
 
 
 settings = Settings()

@@ -76,6 +76,29 @@ class ConfigValidationTests(unittest.TestCase):
             with self.assertRaisesRegex(ValueError, "RETRIEVAL_TOP_K must be a positive integer"):
                 settings.validate()
 
+    def test_cors_validation_valid_origins(self) -> None:
+        env = {
+            "GROQ_API_KEY": "some-key",
+            "CORS_ALLOWED_ORIGINS": "http://app.com,https://api.app.com, *",
+        }
+        with patch.dict("os.environ", env, clear=True):
+            settings = Settings()
+            settings.validate()
+            self.assertEqual(
+                settings.cors_allowed_origins,
+                ["http://app.com", "https://api.app.com", "*"]
+            )
+
+    def test_cors_validation_invalid_origin_raises_error(self) -> None:
+        env = {
+            "GROQ_API_KEY": "some-key",
+            "CORS_ALLOWED_ORIGINS": "http://app.com, ftp://invalid-proto.com",
+        }
+        with patch.dict("os.environ", env, clear=True):
+            settings = Settings()
+            with self.assertRaisesRegex(ValueError, "Invalid CORS origin"):
+                settings.validate()
+
 
 if __name__ == "__main__":
     unittest.main()
