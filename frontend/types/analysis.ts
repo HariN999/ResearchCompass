@@ -1,4 +1,4 @@
-export interface AnalysisResult {
+export interface AnalysisResponse {
   research_domain: string;
   executive_summary: string;
   problem_statement: string;

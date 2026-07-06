@@ -1,41 +1,67 @@
-# ResearchCompass — Architecture
+# ResearchCompass — Current Architecture
 
-## Request Flow
+## Request flow
 
 ```text
-User Browser → Next.js Frontend → FastAPI Backend → PyMuPDF → Groq LLM → JSON Response → Frontend Dashboard
+User Browser → Next.js Frontend → FastAPI Backend → PyMuPDF → Groq → Pydantic → Frontend Dashboard
 ```
 
-## Component Breakdown
+## Component breakdown
 
-The Next.js frontend provides the upload interface, error state, loading state, and structured results dashboard. It sends the selected PDF as multipart form data to the backend and renders the returned `AnalysisResponse` fields into focused review sections.
+### Frontend
 
-The FastAPI backend exposes the `/api/analyze` endpoint, validates that uploads are PDFs, extracts text with PyMuPDF, and rejects files with no extractable text. It centralizes CORS and routing so the frontend can run locally on port 3000 while the API runs on port 8000.
+The Next.js frontend provides PDF selection, loading and error states, theme management, and a structured results dashboard. It sends the selected file as `multipart/form-data` to `POST /api/analyze` and renders the returned analysis contract.
 
-The PDF extraction layer uses PyMuPDF to read bytes directly from the upload stream and collect page text. It trims the combined content to 12,000 characters so requests remain bounded while preserving the paper's highest-value front matter, methodology, experiments, and references when available.
+The frontend uses local React state because the current workflow is limited to one upload and one result. `NEXT_PUBLIC_API_URL` configures the backend origin and defaults to `http://localhost:8000` for local development.
 
-The Groq analysis layer sends the extracted paper text to a hosted LLM with a strict reviewer prompt and JSON response mode. The returned JSON is parsed into a Pydantic model before it is sent to the frontend, giving the app a stable typed contract across the stack.
+### FastAPI API
 
-## Why PyMuPDF
+The FastAPI backend registers the `/api/analyze` route, checks that the upload declares a PDF content type, extracts its text, and rejects documents with no extractable content. The root route exposes basic application status.
 
-`fitz` is faster and more accurate than pdfplumber for academic PDFs with complex layouts. It handles multi-column papers, equations, and figures gracefully.
+The API currently handles analysis in the request lifecycle. There is no background job queue, persistence layer, authentication system, or rate limiting.
 
-## Prompt Engineering
+### PDF extraction
 
-The prompt follows a chain-of-thought-like review structure without asking the model to reveal hidden reasoning: domain → problem → methodology → novelty → gaps → viva. This sequence mirrors how senior reviewers evaluate papers, moving from classification and comprehension into technical critique, concrete improvements, and defense-level questioning.
+PyMuPDF opens the uploaded bytes in memory and extracts plain text from each page. The combined text is trimmed to the first 12,000 characters before analysis.
 
-JSON mode was used over function calling because the application needs one complete structured review object rather than tool orchestration or multiple callable actions. JSON mode keeps the response compact, predictable, and easy to validate with Pydantic while still allowing long-form technical strings inside each field.
+This keeps model input bounded, but it can omit later sections of long papers. The current extractor does not perform OCR, semantic section detection, table extraction, or layout reconstruction.
 
-## Extending the System
+### Groq analysis
 
-### Vector Search for Gap Detection
+The analysis service sends the extracted text to `llama-3.3-70b-versatile` through Groq. A system prompt requests a structured academic review and JSON response. The response is decoded and validated against the backend `AnalysisResponse` Pydantic model before it is returned to the frontend.
 
-Add FAISS and sentence-transformers to index a corpus of related papers by abstract, introduction, methods, and conclusion sections. During analysis, embed the uploaded paper, retrieve the closest prior work, and pass the retrieved summaries into the analysis prompt so gap detection is grounded in comparable literature instead of only the uploaded text.
+The workflow is a single LLM call. It is not an autonomous agent and does not currently use tools, vector search, retrieval-augmented generation, external literature, or citations.
 
-### Citation Analysis
+## Response contract
 
-Extract the references section with layout heuristics, parse titles/authors/venues, and resolve metadata through Crossref or Semantic Scholar. Store citation edges in a graph database or adjacency list so the system can detect missing seminal works, over-reliance on narrow venues, and weak positioning against recent papers.
+The API returns fields for:
 
-### Multi-paper Comparison
+- Research domain
+- Executive summary
+- Problem statement
+- Methodology
+- Contributions, strengths, and weaknesses
+- Research gaps and novelty assessment
+- Implementation improvements and future work
+- Viva questions
+- Publication-readiness score and justification
 
-Allow batch uploads and run the same extraction pipeline for each paper. Then add a comparison endpoint that aligns domains, methods, datasets, metrics, claims, limitations, and future work across papers to identify shared blind spots and unique contributions.
+The same contract is represented by a TypeScript interface in the frontend.
+
+## Configuration
+
+Backend:
+
+```env
+GROQ_API_KEY=your_groq_api_key_here
+```
+
+Frontend:
+
+```env
+NEXT_PUBLIC_API_URL=http://localhost:8000
+```
+
+## Current boundaries
+
+This document describes the Phase 1 architecture only. Later phases will introduce chunking, sentence-transformer embeddings, ChromaDB, retrieval, provider abstraction, and evidence-backed citations. Those capabilities are intentionally not part of the current implementation.

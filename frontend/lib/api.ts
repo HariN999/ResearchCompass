@@ -1,10 +1,12 @@
-import type { AnalysisResult } from "../types/analysis";
+import type { AnalysisResponse } from "../types/analysis";
 
-export async function analyzeResearchPaper(file: File): Promise<AnalysisResult> {
+export async function analyzeResearchPaper(file: File): Promise<AnalysisResponse> {
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch("http://localhost:8000/api/analyze", {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+  const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/analyze`, {
     method: "POST",
     body: formData,
   });
@@ -14,5 +16,5 @@ export async function analyzeResearchPaper(file: File): Promise<AnalysisResult> 
     throw new Error(errorBody?.detail ?? "Failed to analyze the research paper.");
   }
 
-  return response.json() as Promise<AnalysisResult>;
+  return response.json() as Promise<AnalysisResponse>;
 }
