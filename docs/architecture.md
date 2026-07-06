@@ -39,7 +39,7 @@ ResearchCompass is structured into distinct modules to separate concerns and sup
 
 ### A. Frontend Web Interface
 *   **Next.js App Shell**: Located in [frontend/app/page.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/app/page.tsx). It governs local page state, theme settings (light/dark mode toggle), and file upload interactions.
-*   **Progress Stepper**: Managed in [frontend/components/AnalysisWorkflow.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/components/AnalysisWorkflow.tsx). It tracks the asynchronous pipeline state and provides animated feedback during the analysis steps.
+*   **Progress Timeline**: Managed in [frontend/components/AgentWorkflow.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/components/AgentWorkflow.tsx). It tracks the asynchronous pipeline state, providing terminal console outputs and workflow feedback.
 *   **Dashboard Layout**: Implemented in [frontend/components/ResultsDashboard.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/components/ResultsDashboard.tsx) and associated subcomponents like [ScoreCard.tsx](file:///Users/harshavardhan/Desktop/Microsoft-Hackathon/frontend/components/ScoreCard.tsx), displaying structured metrics, weaknesses, future improvements, and thesis defense questions.
 
 ### B. FastAPI Router & Dependency Injection
@@ -69,15 +69,15 @@ ResearchCompass is structured into distinct modules to separate concerns and sup
 
 ---
 
-## 3. Retrieval Foundation Separation
+## 3. Retrieval & RAG Context Assembly
 
-It is critical to distinguish current capabilities from planned retrieval functions:
+During analysis, ResearchCompass leverages its persistent vector database to query relevant chunks for LLM context construction:
 
 > [!IMPORTANT]
-> **Active Ingestion vs. Passive Retrieval**
-> *   **Current Capability**: Every document analyzed goes through the ingestion pipeline, is chunked, embedded, and indexed into the ChromaDB collection. This establishes a **Retrieval Foundation**.
-> *   **Prompt Execution**: In the current phase, the actual prompt context is constructed by taking the first 16,000 characters of page text directly using `DocumentIngestionResult.to_analysis_input()`. It does **not** perform a similarity search query to construct the context window.
-> *   **Rationale**: Composing context directly from consecutive pages ensures that context flows logically (ideal for structured peer reviews of a single document), while the ChromaDB storage lays the infrastructure for multi-document comparisons and grounded gap detection in future phases.
+> **Vector-Based RAG Context Assembly**
+> *   **Context Querying**: ResearchCompass performs a vector similarity lookup against the newly ingested document's chunks in ChromaDB, using a query text indexing primary academic segments (`"abstract introduction methodology experiments results discussion conclusion"`).
+> *   **Context Flow**: Up to 5 matching chunks are retrieved, de-duplicated, sorted by their original chunk index to preserve logical flow, and assembled up to a 16,000-character context window.
+> *   **Robust Fallback**: If vector retrieval returns 0 chunks or encounters database errors, the pipeline falls back gracefully to `DocumentIngestionResult.to_analysis_input()`, composing context directly from the first 16,000 characters of consecutive pages.
 
 ---
 
