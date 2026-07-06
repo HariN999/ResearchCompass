@@ -7,6 +7,7 @@ import { UploadSection } from "../components/UploadSection";
 import { AgentWorkflow } from "../components/AgentWorkflow";
 import { analyzeResearchPaper } from "../lib/api";
 import type { AnalysisResult } from "../types/analysis";
+import { Layers, FileCheck, Search, Code, HelpCircle, TrendingUp } from "lucide-react";
 
 export default function Home(): JSX.Element {
   const [result, setResult] = useState<AnalysisResult | null>(null);
@@ -92,67 +93,120 @@ export default function Home(): JSX.Element {
         
         {/* LANDING HERO VIEW */}
         {!result && !loading ? (
-          <div className="grid gap-12 md:grid-cols-[1fr_420px] items-center py-10 md:py-16 animate-fadeIn">
-            
-            {/* Left Column: Value Prop */}
-            <div className="text-left space-y-6">
-              <span className="inline-flex items-center gap-1.5 rounded-full bg-indigo-50 px-3 py-1 text-xs font-semibold text-indigo-600 dark:bg-indigo-950/40 dark:text-indigo-400">
-                <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-indigo-500" />
-                Academic Intelligence
-              </span>
+          <div className="space-y-16 py-6 md:py-12">
+            <div className="grid gap-12 lg:grid-cols-[1fr_420px] items-start animate-fadeIn">
               
-              <h1 className="text-4xl font-extrabold tracking-tight sm:text-5xl leading-[1.15] text-gray-900 dark:text-white">
-                Evaluate Research Gaps & <br />
-                <span className="bg-gradient-to-r from-indigo-500 to-purple-600 bg-clip-text text-transparent dark:from-indigo-400 dark:to-purple-500">
-                  Accelerate Science
+              {/* Left Column: Value Prop */}
+              <div className="text-left space-y-8">
+                <span className="inline-flex items-center gap-2 rounded-full border border-white/5 bg-white/[0.03] backdrop-blur-md px-3.5 py-1 text-[11px] font-semibold text-accent tracking-wider uppercase select-none">
+                  <span className="h-1.5 w-1.5 animate-pulse rounded-full bg-accent" />
+                  Institutional Grade Protocol
                 </span>
-              </h1>
-              
-              <p className="text-sm leading-relaxed text-gray-500 dark:text-gray-400 max-w-xl">
-                ResearchCompass runs your academic papers through a structured six-stage analysis workflow. Powered by <strong>Groq Cloud (llama-3.3-70b-versatile)</strong>, it critiques methodology baselines, identifies unaddressed limits, and computes publication readiness.
-              </p>
+                
+                <h1 className="text-4xl sm:text-5xl font-serif font-medium leading-[1.12] text-text-primary tracking-tight">
+                  Evaluate Research Gaps & <br />
+                  <span className="text-accent bg-gradient-to-r from-accent to-[#00A8FF] bg-clip-text text-transparent">
+                    Accelerate Science
+                  </span>
+                </h1>
+                
+                <p className="text-sm leading-relaxed text-text-secondary max-w-xl font-sans">
+                  Run your academic manuscripts through a structured six-stage analytical engine to audit methodology, uncover hidden gaps, and compute publication readiness.
+                </p>
 
-              {/* Bullet Features list */}
-              <div className="space-y-3 pt-2">
-                {[
-                  "Domain Classification & Subfield Categorization",
-                  "Deep Methodology & Experimental baseline audits",
-                  "Exposing unaddressed weaknesses and research gaps",
-                  "Generating concrete code and implementation recommendations",
-                  "Ph.D. Thesis committee viva questions",
-                  "Verified publication readiness scorecard"
-                ].map((feat) => (
-                  <div key={feat} className="flex items-center gap-2.5 text-xs text-gray-600 dark:text-gray-400">
-                    <svg className="h-4 w-4 shrink-0 text-indigo-500 dark:text-indigo-400" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth="3">
-                      <path strokeLinecap="round" strokeLinejoin="round" d="M5 13l4 4L19 7" />
-                    </svg>
-                    <span>{feat}</span>
-                  </div>
-                ))}
+                {/* Interactive 6-Stage Timeline Node Layout */}
+                <div className="relative border-l border-white/5 ml-3 pl-6 space-y-6 pt-2 select-none">
+                  {[
+                    {
+                      title: "Domain Classification & Subfield Categorization",
+                      description: "Taxonomy sorting and subfield cluster mapping.",
+                      icon: <Layers className="h-4 w-4" />
+                    },
+                    {
+                      title: "Deep Methodology & Experimental Baseline Audits",
+                      description: "Auditing datasets, baselines, and model assumptions.",
+                      icon: <FileCheck className="h-4 w-4" />
+                    },
+                    {
+                      title: "Exposing Unaddressed Weaknesses & Research Gaps",
+                      description: "Extracting design limits and unaddressed constraints.",
+                      icon: <Search className="h-4 w-4" />
+                    },
+                    {
+                      title: "Generating Concrete Code & Implementation Recommendations",
+                      description: "Structuring algorithmic optimizations and fixes.",
+                      icon: <Code className="h-4 w-4" />
+                    },
+                    {
+                      title: "Ph.D. Thesis Committee Viva Questions",
+                      description: "Compiling defense-level reasoning questions.",
+                      icon: <HelpCircle className="h-4 w-4" />
+                    },
+                    {
+                      title: "Verified Publication Readiness Scorecard",
+                      description: "Generating performance ratios and readiness metrics.",
+                      icon: <TrendingUp className="h-4 w-4" />
+                    }
+                  ].map((stage, idx) => (
+                    <div key={idx} className="relative group/node">
+                      {/* Timeline Node dot */}
+                      <span className="absolute -left-[31px] top-1 flex h-[10px] w-[10px] items-center justify-center rounded-full bg-[#0B0F19] border border-white/10 group-hover/node:border-accent/40 group-hover/node:bg-accent transition-all duration-300">
+                        <span className="h-1.5 w-1.5 rounded-full bg-white/20 group-hover/node:bg-[#0B0F19]" />
+                      </span>
+                      <div className="flex items-start gap-4">
+                        <span className="mt-0.5 text-text-muted group-hover/node:text-accent transition-colors duration-300">
+                          {stage.icon}
+                        </span>
+                        <div className="space-y-0.5">
+                          <h4 className="text-xs font-semibold text-text-primary group-hover/node:text-accent transition-colors duration-300">
+                            {stage.title}
+                          </h4>
+                          <p className="text-[11px] text-text-muted leading-normal">
+                            {stage.description}
+                          </p>
+                        </div>
+                      </div>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="h-px bg-white/5 max-w-xl" />
+
+                <p className="text-[11px] text-text-muted select-none flex items-center gap-1.5 pt-2 font-sans">
+                  <svg className="h-3.5 w-3.5 text-accent/60" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z" />
+                  </svg>
+                  Data is fully encrypted, sandboxed, and compliant with academic privacy standards.
+                </p>
               </div>
 
-              {/* Integration Badges */}
-              <div className="flex flex-wrap items-center gap-2 pt-4">
-                <span className="inline-flex items-center rounded-md border border-gray-250 bg-gray-50/50 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
-                  Groq Cloud Layer
-                </span>
-                <span className="inline-flex items-center rounded-md border border-gray-255 bg-gray-50/50 px-2.5 py-1 text-[10px] font-bold text-gray-500 uppercase tracking-wider dark:border-gray-800 dark:bg-gray-900/40 dark:text-gray-400">
-                  llama-3.3 deployment
-                </span>
+              {/* Right Column: Upload Card */}
+              <div className="rounded-2xl p-6 glass-card relative overflow-hidden group">
+                <h3 className="text-sm font-bold text-text-primary text-left">
+                  Start Review Process
+                </h3>
+                <p className="mt-1 text-xs text-text-secondary text-left">
+                  Select your draft manuscript in PDF format.
+                </p>
+                <UploadSection onAnalyze={handleAnalyze} loading={loading} />
               </div>
             </div>
 
-            {/* Right Column: Upload Card */}
-            <div className="rounded-2xl border border-gray-200 bg-white p-6 shadow-md dark:border-gray-800 dark:bg-gray-950/40">
-              <h3 className="text-sm font-bold text-gray-900 dark:text-white text-left">
-                Start Review Process
-              </h3>
-              <p className="mt-1 text-xs text-gray-500 dark:text-gray-400 text-left">
-                Select your draft manuscript in PDF format.
+            {/* University Reputation Banner */}
+            <div className="pt-10 border-t border-white/5 flex flex-col items-center justify-center gap-4 text-center select-none animate-fadeIn">
+              <p className="text-[10px] uppercase tracking-wider text-text-muted font-semibold">
+                Processing papers for researchers at global institutions
               </p>
-              <UploadSection onAnalyze={handleAnalyze} loading={loading} />
+              <div className="flex flex-wrap items-center justify-center gap-x-8 gap-y-2 text-xs font-semibold text-text-muted/40 font-sans">
+                <span>Massachusetts Institute of Technology</span>
+                <span>•</span>
+                <span>Stanford University</span>
+                <span>•</span>
+                <span>University of Oxford</span>
+                <span>•</span>
+                <span>University of Cambridge</span>
+              </div>
             </div>
-
           </div>
         ) : null}
 
