@@ -137,3 +137,19 @@ class ComparisonResponse(BaseModel):
     strength_comparison: str
     weakness_comparison: str
     overall_recommendation: str
+
+
+class LiteratureReviewRequest(BaseModel):
+    document_ids: list[str]
+
+
+class LiteratureReviewResponse(BaseModel):
+    overview: str
+    major_themes: str
+    methodology_trends: str
+    strengths: str
+    limitations: str
+    research_trends: str
+    open_challenges: str
+    future_directions: str
+    generated_literature_review: str
