@@ -7,6 +7,7 @@ from dependencies import (
     get_analysis_service,
     get_document_ingestion_service,
     get_retrieval_service,
+    get_comparison_service,
 )
 from exceptions import (
     AnalysisError,
@@ -21,8 +22,16 @@ from exceptions import (
     ProviderConfigError,
     VectorStoreError,
 )
-from models import AnalysisResponse, RetrievedChunk, DocumentIngestionStatus, BatchIngestionResponse
+from models import (
+    AnalysisResponse,
+    RetrievedChunk,
+    DocumentIngestionStatus,
+    BatchIngestionResponse,
+    ComparisonRequest,
+    ComparisonResponse,
+)
 from services.analysis_service import AnalysisService
+from services.comparison_service import ComparisonService
 from services.document_ingestion_service import DocumentIngestionService
 from services.retrieval_service import RetrievalService
 import time
@@ -202,4 +211,25 @@ async def ingest(
             )
 
     return BatchIngestionResponse(results=results)
+
+
+@router.post("/compare", response_model=ComparisonResponse)
+async def compare_documents(
+    request: ComparisonRequest,
+    comparison_service: Annotated[ComparisonService, Depends(get_comparison_service)],
+) -> ComparisonResponse:
+    logger.info("API request received: POST /api/compare for %d documents", len(request.document_ids))
+    try:
+        response = comparison_service.compare_papers(request.document_ids)
+        logger.info("API request successfully completed: POST /api/compare")
+        return response
+    except ValueError as exc:
+        logger.warning("Validation failure in compare endpoint: %s", str(exc))
+        raise HTTPException(status_code=400, detail=str(exc)) from exc
+    except (AnalysisError, LLMProviderError, InvalidLLMResponseError) as exc:
+        logger.error("Comparison execution failed: %s", str(exc), exc_info=True)
+        raise HTTPException(status_code=502, detail=str(exc)) from exc
+    except Exception as exc:
+        logger.critical("Unexpected unhandled exception during compare request: %s", str(exc), exc_info=True)
+        raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
 

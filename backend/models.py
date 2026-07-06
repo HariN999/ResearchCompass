@@ -122,3 +122,18 @@ class DocumentIngestionStatus(BaseModel):
 
 class BatchIngestionResponse(BaseModel):
     results: list[DocumentIngestionStatus]
+
+
+class ComparisonRequest(BaseModel):
+    document_ids: list[str]
+
+
+class ComparisonResponse(BaseModel):
+    executive_comparison: str
+    similarities: str
+    differences: str
+    methodology_comparison: str
+    dataset_comparison: str
+    strength_comparison: str
+    weakness_comparison: str
+    overall_recommendation: str
