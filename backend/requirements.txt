@@ -3,6 +3,8 @@ uvicorn
 python-multipart
 pymupdf
 groq
+httpx
 pydantic
 python-dotenv
-openai
+sentence-transformers
+chromadb

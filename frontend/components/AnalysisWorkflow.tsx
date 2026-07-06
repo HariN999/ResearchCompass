@@ -3,7 +3,7 @@
 import { useEffect, useState, useRef } from "react";
 import { motion } from "framer-motion";
 
-interface AgentWorkflowProps {
+interface AnalysisWorkflowProps {
   loading: boolean;
 }
 
@@ -17,19 +17,19 @@ const steps = [
 
 const mockLogs = [
   { time: "+0.2s", type: "system", message: "Opening PDF stream inside PyMuPDF memory buffer..." },
-  { time: "+0.8s", type: "system", message: "Extracted text payload: 12,000 characters from front matter/conclusions." },
-  { time: "+1.5s", type: "agent", message: "Cognitive pipeline active. Reaching Azure AI Foundry (o4-mini)..." },
-  { time: "+2.4s", type: "agent", message: "Domain Classification: Scanning taxonomy databases..." },
-  { time: "+3.8s", type: "agent", message: "Methodology: Analyzing training objectives, datasets, and benchmark baselines..." },
-  { time: "+5.1s", type: "agent", message: "Novelty Assessment: Checking for incremental extensions vs. structural contributions..." },
-  { time: "+6.5s", type: "agent", message: "Gap Discovery: Exposing unaddressed constraints and experimental limitations..." },
-  { time: "+7.9s", type: "agent", message: "Code & Implementation: Generating concrete hardware and scaling recommendations..." },
-  { time: "+9.2s", type: "agent", message: "Viva Generation: Compiling doctoral-level defense questions..." },
-  { time: "+10.5s", type: "agent", message: "Scoring: Normalizing publication readiness score and compiling final justification report..." },
+  { time: "+0.8s", type: "system", message: "Preparing the extracted text payload for review..." },
+  { time: "+1.5s", type: "analysis", message: "Review pipeline active. Sending the manuscript to Groq..." },
+  { time: "+2.4s", type: "analysis", message: "Domain Classification: Reviewing topic and subfield terminology..." },
+  { time: "+3.8s", type: "analysis", message: "Methodology: Analyzing training objectives, datasets, and benchmark baselines..." },
+  { time: "+5.1s", type: "analysis", message: "Novelty Assessment: Checking for incremental extensions vs. structural contributions..." },
+  { time: "+6.5s", type: "analysis", message: "Gap Discovery: Exposing unaddressed constraints and experimental limitations..." },
+  { time: "+7.9s", type: "analysis", message: "Code & Implementation: Generating concrete hardware and scaling recommendations..." },
+  { time: "+9.2s", type: "analysis", message: "Viva Generation: Compiling doctoral-level defense questions..." },
+  { time: "+10.5s", type: "analysis", message: "Scoring: Normalizing publication readiness score and compiling final justification report..." },
   { time: "+11.8s", type: "system", message: "Structuring analysis payload into verified JSON schema..." }
 ];
 
-export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | null {
+export function AnalysisWorkflow({ loading }: AnalysisWorkflowProps): JSX.Element | null {
   const [currentStep, setCurrentStep] = useState(0);
   const [logs, setLogs] = useState<typeof mockLogs>([]);
   const consoleEndRef = useRef<HTMLDivElement | null>(null);
@@ -80,7 +80,7 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
       {/* Visual Pipeline Checklist with Connecting Line */}
       <div className="relative rounded-2xl border border-slate-200/80 dark:border-white/10 bg-white dark:bg-slate-900/30 p-4 sm:p-6 shadow-sm dark:shadow-xl backdrop-blur-md">
         <h4 className="text-xs font-semibold uppercase tracking-wider text-indigo-600 dark:text-indigo-400">
-          Agent Reasoning Pipeline
+          Analysis Pipeline
         </h4>
         
         {/* Timeline container */}
@@ -156,7 +156,7 @@ export function AgentWorkflow({ loading }: AgentWorkflowProps): JSX.Element | nu
             <span className="h-2.5 w-2.5 rounded-full bg-red-400/85 dark:bg-red-500/80" />
             <span className="h-2.5 w-2.5 rounded-full bg-amber-400/85 dark:bg-amber-50/80" style={{ backgroundColor: "rgb(245 158 11)" }} />
             <span className="h-2.5 w-2.5 rounded-full bg-emerald-400/85 dark:bg-emerald-500/80" />
-            <span className="ml-2 text-slate-400 dark:text-slate-500 text-[10px] font-bold">azure-foundry-o4-mini@agent</span>
+            <span className="ml-2 text-slate-400 dark:text-slate-500 text-[10px] font-bold">groq@research-review</span>
           </div>
           <span className="h-2 w-2 animate-pulse rounded-full bg-indigo-500 shadow-[0_0_8px_rgba(99,102,241,0.4)] dark:shadow-[0_0_8px_rgba(99,102,241,0.6)]" />
         </div>
