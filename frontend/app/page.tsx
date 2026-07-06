@@ -246,9 +246,6 @@ export default function Home(): JSX.Element {
                           const response = await ingestDocuments(files);
                           return response.results;
                         }}
-                        onUploadComplete={() => {
-                          setIsUploadOpen(false);
-                        }}
                       />
                     </div>
                   </div>
