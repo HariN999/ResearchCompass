@@ -1,8 +1,6 @@
 from abc import ABC, abstractmethod
 
-
-class LLMProviderError(RuntimeError):
-    """Raised when an LLM provider cannot return a usable completion."""
+from exceptions import LLMProviderError
 
 
 class LLMProvider(ABC):

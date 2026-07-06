@@ -1,9 +1,13 @@
 from __future__ import annotations
 
+import logging
 from typing import Any
 
+from exceptions import VectorStoreError
 from models import DocumentChunk, DocumentIngestionResult, RetrievedChunk
 from services.embedding_service import EmbeddingService
+
+logger = logging.getLogger(__name__)
 
 
 class VectorStoreService:
@@ -28,19 +32,26 @@ class VectorStoreService:
         if not chunks:
             return
 
-        collection = self._get_collection()
-        embeddings = self._embedding_service.embed_documents([chunk.text for chunk in chunks])
-        ids = [self._chunk_id(ingestion_result.metadata.document_id, chunk) for chunk in chunks]
-        metadatas = [
-            self._chunk_metadata(ingestion_result=ingestion_result, chunk=chunk) for chunk in chunks
-        ]
+        doc_id = ingestion_result.metadata.document_id
+        logger.info("Vector indexing: Start indexing document %s with %d chunks", doc_id, len(chunks))
+        try:
+            collection = self._get_collection()
+            embeddings = self._embedding_service.embed_documents([chunk.text for chunk in chunks])
+            ids = [self._chunk_id(doc_id, chunk) for chunk in chunks]
+            metadatas = [
+                self._chunk_metadata(ingestion_result=ingestion_result, chunk=chunk) for chunk in chunks
+            ]
 
-        collection.upsert(
-            ids=ids,
-            documents=[chunk.text for chunk in chunks],
-            embeddings=embeddings,
-            metadatas=metadatas,
-        )
+            collection.upsert(
+                ids=ids,
+                documents=[chunk.text for chunk in chunks],
+                embeddings=embeddings,
+                metadatas=metadatas,
+            )
+            logger.info("Vector indexing: Successfully indexed %d chunks for document %s", len(chunks), doc_id)
+        except Exception as exc:
+            logger.error("Vector indexing failed for document %s: %s", doc_id, str(exc), exc_info=True)
+            raise VectorStoreError(f"Failed to index document {doc_id} in vector store.") from exc
 
     def query(
         self,
@@ -52,36 +63,53 @@ class VectorStoreService:
         if not query_text.strip():
             return []
 
-        collection = self._get_collection()
-        query_embedding = self._embedding_service.embed_query(query_text)
-        where = {"document_id": document_id} if document_id else None
-        results = collection.query(
-            query_embeddings=[query_embedding],
-            n_results=top_k,
-            where=where,
-        )
-        return self._map_query_results(results)
+        logger.info("Querying vector store. Query: '%s', top_k: %d, document_id: %s", query_text, top_k, document_id)
+        try:
+            collection = self._get_collection()
+            query_embedding = self._embedding_service.embed_query(query_text)
+            where = {"document_id": document_id} if document_id else None
+            results = collection.query(
+                query_embeddings=[query_embedding],
+                n_results=top_k,
+                where=where,
+            )
+            return self._map_query_results(results)
+        except Exception as exc:
+            logger.error("Vector store query failed: %s", str(exc), exc_info=True)
+            raise VectorStoreError("Vector store query failed.") from exc
 
     def _get_collection(self) -> Any:
         if self._collection is None:
-            client = self._get_client()
-            self._collection = client.get_or_create_collection(
-                name=self._collection_name,
-                metadata={"embedding_model": self._embedding_service.model_name},
-            )
+            try:
+                client = self._get_client()
+                self._collection = client.get_or_create_collection(
+                    name=self._collection_name,
+                    metadata={"embedding_model": self._embedding_service.model_name},
+                )
+            except Exception as exc:
+                if isinstance(exc, VectorStoreError):
+                    raise
+                logger.error("Failed to get or create ChromaDB collection: %s", str(exc), exc_info=True)
+                raise VectorStoreError("Failed to access vector store collection.") from exc
 
         return self._collection
 
     def _get_client(self) -> Any:
         if self._client is None:
+            logger.info("Initializing ChromaDB persistent client at: %s", self._persist_directory)
             try:
                 import chromadb
             except ImportError as exc:
-                raise RuntimeError(
-                    "chromadb is not installed. Run pip install -r backend/requirements.txt."
+                logger.error("chromadb is not installed. Failed to import.", exc_info=True)
+                raise VectorStoreError(
+                    "chromadb is not installed. Run pip install chromadb."
                 ) from exc
-
-            self._client = chromadb.PersistentClient(path=self._persist_directory)
+            try:
+                self._client = chromadb.PersistentClient(path=self._persist_directory)
+                logger.info("Successfully initialized ChromaDB client.")
+            except Exception as exc:
+                logger.error("Failed to initialize ChromaDB PersistentClient: %s", str(exc), exc_info=True)
+                raise VectorStoreError("Failed to initialize vector database store client.") from exc
 
         return self._client
 
