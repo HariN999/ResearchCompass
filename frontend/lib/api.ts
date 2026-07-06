@@ -1,4 +1,4 @@
-import type { AnalysisResponse, ComparisonResponse } from "../types/analysis";
+import type { AnalysisResponse, ComparisonResponse, LiteratureReviewResponse } from "../types/analysis";
 
 export async function analyzeResearchPaper(file: File): Promise<AnalysisResponse> {
   const formData = new FormData();
@@ -68,4 +68,23 @@ export async function compareDocuments(documentIds: string[]): Promise<Compariso
   }
 
   return response.json() as Promise<ComparisonResponse>;
+}
+
+export async function generateLiteratureReview(documentIds: string[]): Promise<LiteratureReviewResponse> {
+  const apiUrl = process.env.NEXT_PUBLIC_API_URL ?? "http://localhost:8000";
+
+  const response = await fetch(`${apiUrl.replace(/\/$/, "")}/api/literature-review`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ document_ids: documentIds }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(errorBody?.detail ?? "Failed to generate the literature review.");
+  }
+
+  return response.json() as Promise<LiteratureReviewResponse>;
 }
