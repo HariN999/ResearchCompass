@@ -25,3 +25,15 @@ export interface ComparisonResponse {
   weakness_comparison: string;
   overall_recommendation: string;
 }
+
+export interface LiteratureReviewResponse {
+  overview: string;
+  major_themes: string;
+  methodology_trends: string;
+  strengths: string;
+  limitations: string;
+  research_trends: string;
+  open_challenges: string;
+  future_directions: string;
+  generated_literature_review: string;
+}

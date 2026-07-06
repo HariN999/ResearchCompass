@@ -6,8 +6,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import { ResultsDashboard } from "../components/ResultsDashboard";
 import { UploadSection } from "../components/UploadSection";
 import { AnalysisWorkflow } from "../components/AnalysisWorkflow";
-import { analyzeResearchPaper, compareDocuments, ingestDocuments } from "../lib/api";
-import type { AnalysisResponse, ComparisonResponse } from "../types/analysis";
+import { analyzeResearchPaper, compareDocuments, generateLiteratureReview, ingestDocuments } from "../lib/api";
+import type { AnalysisResponse, ComparisonResponse, LiteratureReviewResponse } from "../types/analysis";
 import { AppShell } from "../components/layout/AppShell";
 import { HeroSection } from "../components/dashboard/HeroSection";
 import { QuickActionCard } from "../components/dashboard/QuickActionCard";
@@ -17,6 +17,7 @@ import { EmptyState } from "../components/dashboard/EmptyState";
 import { MultiUploadPanel } from "../components/upload/MultiUploadPanel";
 import { AnalysisWorkspace } from "../components/analysis/AnalysisWorkspace";
 import { ComparisonWorkspace } from "../components/comparison/ComparisonWorkspace";
+import { LiteratureReviewWorkspace } from "../components/literature/LiteratureReviewWorkspace";
 import { DocumentToolbar } from "../components/library/DocumentToolbar";
 import { SearchBar } from "../components/library/SearchBar";
 import { FilterPanel } from "../components/library/FilterPanel";
@@ -64,6 +65,10 @@ export default function Home(): JSX.Element {
   const [comparisonLoading, setComparisonLoading] = useState<boolean>(false);
   const [comparisonError, setComparisonError] = useState<string | null>(null);
   const [comparisonSelection, setComparisonSelection] = useState<LibraryDocument[]>([]);
+  const [literatureReview, setLiteratureReview] = useState<LiteratureReviewResponse | null>(null);
+  const [literatureReviewLoading, setLiteratureReviewLoading] = useState<boolean>(false);
+  const [literatureReviewError, setLiteratureReviewError] = useState<string | null>(null);
+  const [literatureReviewSelection, setLiteratureReviewSelection] = useState<LibraryDocument[]>([]);
 
   const mockActivities = [
     {
@@ -229,7 +234,14 @@ export default function Home(): JSX.Element {
         setLibraryMessage(`Added ${targetDoc?.title ?? "the selected document"} to the comparison workspace.`);
         break;
       case "literature-review":
-        setLibraryMessage("Literature review is not part of this workspace scope.");
+        setLiteratureReviewSelection((prev) => {
+          if (prev.some((doc) => doc.id === id)) {
+            return prev;
+          }
+          return [...prev, targetDoc ?? null].filter(Boolean) as LibraryDocument[];
+        });
+        setActiveTab("literature-review");
+        setLibraryMessage(`Added ${targetDoc?.title ?? "the selected document"} to the literature review workspace.`);
         break;
       case "delete":
         setLibraryDocuments((prev) => prev.filter((doc) => doc.id !== id));
@@ -291,6 +303,54 @@ export default function Home(): JSX.Element {
     setComparisonSelection([]);
     setComparison(null);
     setComparisonError(null);
+  };
+
+  const handleGenerateLiteratureReview = async () => {
+    if (literatureReviewSelection.length < 2) {
+      setLiteratureReviewError("Select at least two papers to generate a literature review.");
+      return;
+    }
+
+    setLiteratureReviewLoading(true);
+    setLiteratureReviewError(null);
+
+    try {
+      const response = await generateLiteratureReview(literatureReviewSelection.map((doc) => doc.id));
+      setLiteratureReview(response);
+    } catch (err) {
+      setLiteratureReview(null);
+      setLiteratureReviewError(err instanceof Error ? err.message : "Something went wrong while generating the literature review.");
+    } finally {
+      setLiteratureReviewLoading(false);
+    }
+  };
+
+  const handleRemoveLiteraturePaper = (id: string) => {
+    setLiteratureReviewSelection((prev) => prev.filter((doc) => doc.id !== id));
+  };
+
+  const handleMoveLiteraturePaper = (id: string, direction: "up" | "down") => {
+    setLiteratureReviewSelection((prev) => {
+      const index = prev.findIndex((doc) => doc.id === id);
+      if (index < 0) {
+        return prev;
+      }
+
+      const next = [...prev];
+      const targetIndex = direction === "up" ? index - 1 : index + 1;
+      if (targetIndex < 0 || targetIndex >= next.length) {
+        return prev;
+      }
+
+      [next[index], next[targetIndex]] = [next[targetIndex], next[index]];
+      return next;
+    });
+  };
+
+  const handleResetLiteratureReview = () => {
+    setLiteratureReviewSelection([]);
+    setLiteratureReview(null);
+    setLiteratureReviewError(null);
   };
 
   return (
@@ -519,6 +579,25 @@ export default function Home(): JSX.Element {
         </div>
       )}
 
+      {activeTab === "literature-review" && (
+        <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
+          <div className="mx-auto w-full max-w-7xl">
+            <LiteratureReviewWorkspace
+              selectedPapers={literatureReviewSelection}
+              onRemovePaper={handleRemoveLiteraturePaper}
+              onMovePaper={handleMoveLiteraturePaper}
+              onAddPaper={() => setActiveTab("library")}
+              onGenerate={handleGenerateLiteratureReview}
+              onReset={handleResetLiteratureReview}
+              onBackToLibrary={() => setActiveTab("library")}
+              review={literatureReview}
+              loading={literatureReviewLoading}
+              error={literatureReviewError}
+            />
+          </div>
+        </div>
+      )}
+
       {activeTab === "library" && (
         <div className="flex-1 overflow-y-auto px-4 sm:px-6 py-6">
           <div className="mx-auto flex w-full max-w-7xl flex-col gap-6">
@@ -577,7 +656,7 @@ export default function Home(): JSX.Element {
         </div>
       )}
 
-      {activeTab !== "dashboard" && activeTab !== "library" && activeTab !== "analyze" && activeTab !== "compare" && (
+      {activeTab !== "dashboard" && activeTab !== "library" && activeTab !== "analyze" && activeTab !== "compare" && activeTab !== "literature-review" && (
         <div className="flex-1 flex items-center justify-center p-6">
           <div className="max-w-md w-full bg-surface border border-border rounded-large p-8 text-center shadow-card">
             <h2 className="text-heading-l font-bold text-text-primary mb-2">
