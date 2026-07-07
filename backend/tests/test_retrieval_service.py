@@ -144,12 +144,14 @@ class RetrievalServiceTests(unittest.TestCase):
                 query_text: str,
                 top_k: int,
                 document_id: str | None,
+                document_ids: list[str] | None = None,
             ) -> list[RetrievedChunk]:
                 self.query_calls.append(
                     {
                         "query_text": query_text,
                         "top_k": top_k,
                         "document_id": document_id,
+                        "document_ids": document_ids,
                     }
                 )
                 return []
@@ -165,7 +167,7 @@ class RetrievalServiceTests(unittest.TestCase):
         self.assertEqual(results, [])
         self.assertEqual(
             vector_store.query_calls,
-            [{"query_text": "baseline comparison", "top_k": 4, "document_id": "doc-1"}],
+            [{"query_text": "baseline comparison", "top_k": 4, "document_id": "doc-1", "document_ids": None}],
         )
 
 

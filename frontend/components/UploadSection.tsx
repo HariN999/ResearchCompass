@@ -3,24 +3,39 @@
 import { useRef, useState } from "react";
 
 interface UploadSectionProps {
-  onAnalyze: (file: File) => void;
+  onAnalyze: (files: File[]) => void;
   loading: boolean;
 }
 
 export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.Element {
-  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
   const [isDragging, setIsDragging] = useState<boolean>(false);
   const inputRef = useRef<HTMLInputElement | null>(null);
 
-  function selectFile(file: File): void {
-    if (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf")) {
-      setSelectedFile(file);
+  function addFiles(files: FileList | null): void {
+    if (!files) return;
+    const pdfs: File[] = [];
+    for (let i = 0; i < files.length; i++) {
+      const file = files.item(i);
+      if (file && (file.type === "application/pdf" || file.name.toLowerCase().endsWith(".pdf"))) {
+        if (!selectedFiles.some((f) => f.name === file.name && f.size === file.size)) {
+          pdfs.push(file);
+        }
+      }
+    }
+    if (pdfs.length > 0) {
+      setSelectedFiles((prev) => [...prev, ...pdfs]);
     }
   }
 
+  function removeFile(index: number, event: React.MouseEvent): void {
+    event.stopPropagation();
+    setSelectedFiles((prev) => prev.filter((_, i) => i !== index));
+  }
+
   function runAnalysis(): void {
-    if (selectedFile && !loading) {
-      onAnalyze(selectedFile);
+    if (selectedFiles.length > 0 && !loading) {
+      onAnalyze(selectedFiles);
     }
   }
 
@@ -48,23 +63,17 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
         onDrop={(event) => {
           event.preventDefault();
           setIsDragging(false);
-
-          const file = event.dataTransfer.files.item(0);
-          if (file) {
-            selectFile(file);
-          }
+          addFiles(event.dataTransfer.files);
         }}
       >
         <input
           ref={inputRef}
           type="file"
           accept=".pdf"
+          multiple
           className="hidden"
           onChange={(event) => {
-            const file = event.target.files?.item(0);
-            if (file) {
-              selectFile(file);
-            }
+            addFiles(event.target.files);
           }}
         />
 
@@ -80,25 +89,28 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
           </svg>
         </div>
 
-        <p className="mt-4 text-sm font-medium text-gray-900 dark:text-white">Drop your PDF here</p>
-        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Click or drag to upload a research paper</p>
+        <p className="mt-4 text-sm font-medium text-gray-900 dark:text-white">Drop your PDF(s) here</p>
+        <p className="mt-1 text-xs text-gray-400 dark:text-gray-500">Click or drag to upload one or more research papers</p>
 
-        {selectedFile ? (
-          <div className="mt-5 flex justify-center">
-            <div
-              className="flex max-w-full items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
-              onClick={(event) => event.stopPropagation()}
-            >
-              <span className="truncate">{selectedFile.name}</span>
-              <button
-                type="button"
-                className="text-gray-400 transition-all duration-150 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white"
-                onClick={() => setSelectedFile(null)}
-                aria-label="Clear selected file"
+        {selectedFiles.length > 0 ? (
+          <div className="mt-5 flex flex-wrap gap-2 justify-center">
+            {selectedFiles.map((file, idx) => (
+              <div
+                key={`${file.name}-${idx}`}
+                className="flex items-center gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-700 dark:border-gray-800 dark:bg-gray-900 dark:text-gray-200"
+                onClick={(event) => event.stopPropagation()}
               >
-                x
-              </button>
-            </div>
+                <span className="truncate max-w-[150px]">{file.name}</span>
+                <button
+                  type="button"
+                  className="text-gray-400 hover:text-gray-900 dark:text-gray-500 dark:hover:text-white font-bold"
+                  onClick={(event) => removeFile(idx, event)}
+                  aria-label={`Remove ${file.name}`}
+                >
+                  ✕
+                </button>
+              </div>
+            ))}
           </div>
         ) : null}
       </div>
@@ -107,13 +119,17 @@ export function UploadSection({ onAnalyze, loading }: UploadSectionProps): JSX.E
         <button
           type="button"
           onClick={runAnalysis}
-          disabled={!selectedFile || loading}
+          disabled={selectedFiles.length === 0 || loading}
           className="inline-flex items-center gap-2 rounded-md bg-indigo-600 px-5 py-2 text-sm font-medium text-white transition-all duration-150 hover:bg-indigo-500 disabled:cursor-not-allowed disabled:border disabled:border-gray-200 disabled:bg-gray-50 disabled:text-gray-400 dark:disabled:border-gray-800 dark:disabled:bg-gray-900 dark:disabled:text-gray-500"
         >
           {loading ? (
             <span className="h-4 w-4 animate-spin rounded-full border-2 border-white/25 border-t-white" aria-hidden="true" />
           ) : null}
-          {loading ? "Analyzing" : selectedFile ? "Run Analysis" : "Select a PDF"}
+          {loading
+            ? "Analyzing..."
+            : selectedFiles.length > 0
+            ? `Run Analysis (${selectedFiles.length} Paper${selectedFiles.length > 1 ? "s" : ""})`
+            : "Select PDF(s)"}
         </button>
       </div>
     </div>

@@ -59,15 +59,25 @@ class VectorStoreService:
         query_text: str,
         top_k: int = 5,
         document_id: str | None = None,
+        document_ids: list[str] | None = None,
     ) -> list[RetrievedChunk]:
         if not query_text.strip():
             return []
 
-        logger.info("Querying vector store. Query: '%s', top_k: %d, document_id: %s", query_text, top_k, document_id)
+        logger.info("Querying vector store. Query: '%s', top_k: %d, document_id: %s, document_ids: %s", query_text, top_k, document_id, document_ids)
         try:
             collection = self._get_collection()
             query_embedding = self._embedding_service.embed_query(query_text)
-            where = {"document_id": document_id} if document_id else None
+            
+            where = None
+            if document_id:
+                where = {"document_id": document_id}
+            elif document_ids:
+                if len(document_ids) == 1:
+                    where = {"document_id": document_ids[0]}
+                else:
+                    where = {"document_id": {"$in": document_ids}}
+
             results = collection.query(
                 query_embeddings=[query_embedding],
                 n_results=top_k,
