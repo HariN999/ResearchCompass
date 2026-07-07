@@ -25,6 +25,7 @@ from exceptions import (
 )
 from models import (
     AnalysisResponse,
+    AnalysisMetadata,
     RetrievedChunk,
     DocumentIngestionStatus,
     BatchIngestionResponse,
@@ -108,16 +109,11 @@ async def analyze(
         retrieval_start = time.perf_counter()
         document_id = ingestion_result.metadata.document_id
         try:
-            query_text = "abstract introduction methodology experiments results discussion conclusion"
-            chunks = retrieval_service.retrieve(
-                query_text=query_text,
-                top_k=5,
-                document_id=document_id,
-            )
+            chunks = retrieval_service.retrieve_for_analysis(document_id=document_id)
             retrieval_duration = time.perf_counter() - retrieval_start
 
             if not chunks:
-                logger.warning("Retrieval returned 0 chunks for document %s. Using fallback.", document_id)
+                logger.warning("Retrieval strategy returned 0 chunks for document %s. Using fallback.", document_id)
                 logger.info("Retrieval metrics - duration: %.4f seconds, count: 0, fallback: True, evidence used: []", retrieval_duration)
                 analysis_input = ingestion_result.to_analysis_input()
             else:
@@ -131,7 +127,7 @@ async def analyze(
         except Exception as exc:
             retrieval_duration = time.perf_counter() - retrieval_start
             logger.error(
-                "Retrieval failed for document %s. Using fallback. Exception: %s",
+                "Retrieval strategy failed for document %s. Using fallback. Exception: %s",
                 document_id,
                 str(exc),
                 exc_info=True,
@@ -140,6 +136,7 @@ async def analyze(
             analysis_input = ingestion_result.to_analysis_input()
 
         response = analysis_service.analyze_paper(analysis_input)
+        response.metadata = AnalysisMetadata(document_id=document_id)
         logger.info("API request successfully completed: POST /api/analyze for file %s", filename)
         return response
     except EmptyDocumentError as exc:
@@ -270,7 +267,7 @@ async def semantic_search(
 ) -> SemanticSearchResponse:
     logger.info("API request received: POST /api/search with query '%s'", request.query)
     try:
-        chunks = retrieval_service.search(query=request.query, top_k=request.top_k)
+        chunks = retrieval_service.search(query=request.query, top_k=request.top_k, document_ids=request.document_ids)
         results = []
         for chunk in chunks:
             meta = chunk.metadata or {}

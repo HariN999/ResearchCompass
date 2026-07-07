@@ -13,6 +13,20 @@ export interface AnalysisResult {
   viva_questions: string[];
   publication_readiness_score: number;
   publication_readiness_justification: string;
+  metadata?: {
+    document_id: string;
+  } | null;
+}
+
+export interface ComparisonResponse {
+  executive_comparison: string;
+  similarities: string;
+  differences: string;
+  methodology_comparison: string;
+  dataset_comparison: string;
+  strength_comparison: string;
+  weakness_comparison: string;
+  overall_recommendation: string;
 }
 
 export interface LibraryDocument {

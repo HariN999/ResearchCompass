@@ -1,4 +1,4 @@
-import type { AnalysisResult, LibraryDocument, LiteratureReviewResponse } from "../types/analysis";
+import type { AnalysisResult, LibraryDocument, LiteratureReviewResponse, ComparisonResponse } from "../types/analysis";
 
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
@@ -45,4 +45,21 @@ export async function generateLiteratureReview(documentIds: string[]): Promise<L
   }
 
   return response.json() as Promise<LiteratureReviewResponse>;
+}
+
+export async function compareResearchPapers(documentIds: string[]): Promise<ComparisonResponse> {
+  const response = await fetch(`${API_BASE_URL}/api/compare`, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({ document_ids: documentIds }),
+  });
+
+  if (!response.ok) {
+    const errorBody = await response.json().catch(() => null) as { detail?: string } | null;
+    throw new Error(errorBody?.detail ?? "Failed to compare the research papers.");
+  }
+
+  return response.json() as Promise<ComparisonResponse>;
 }

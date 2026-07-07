@@ -5,6 +5,10 @@ from datetime import datetime
 from pydantic import BaseModel, Field
 
 
+class AnalysisMetadata(BaseModel):
+    document_id: str
+
+
 class AnalysisResponse(BaseModel):
     research_domain: str
     executive_summary: str
@@ -20,6 +24,8 @@ class AnalysisResponse(BaseModel):
     viva_questions: list[str]
     publication_readiness_score: int
     publication_readiness_justification: str
+    metadata: AnalysisMetadata | None = None
+
 
 
 class DocumentPage(BaseModel):
@@ -158,6 +164,7 @@ class LiteratureReviewResponse(BaseModel):
 class SemanticSearchRequest(BaseModel):
     query: str
     top_k: int = 5
+    document_ids: list[str] | None = None
 
 
 class SemanticSearchResult(BaseModel):

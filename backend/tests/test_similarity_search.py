@@ -40,6 +40,7 @@ class SimilaritySearchTests(unittest.TestCase):
             query_text="transformer",
             top_k=3,
             document_id=None,
+            document_ids=None,
         )
 
     def test_search_rejects_empty_query(self) -> None:
@@ -66,6 +67,7 @@ class SimilaritySearchTests(unittest.TestCase):
             query_text="nonexistent term",
             top_k=5,
             document_id=None,
+            document_ids=None,
         )
 
 
