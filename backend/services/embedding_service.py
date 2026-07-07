@@ -77,6 +77,12 @@ class EmbeddingService:
             try:
                 self._model = SentenceTransformer(self._model_name)
                 logger.info("Successfully loaded SentenceTransformer model %s", self._model_name)
+                try:
+                    import torch
+                    torch.set_num_threads(1)
+                    logger.info("Successfully set PyTorch CPU thread count to 1 for optimized container execution.")
+                except Exception as torch_exc:
+                    logger.warning("Failed to configure PyTorch thread count: %s", str(torch_exc))
             except Exception as exc:
                 logger.error("Failed to load SentenceTransformer model %s: %s", self._model_name, str(exc), exc_info=True)
                 raise EmbeddingError(f"Failed to load embedding model: {self._model_name}") from exc
