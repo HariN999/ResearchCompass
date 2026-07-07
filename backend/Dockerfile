@@ -1,6 +1,6 @@
 FROM python:3.11-slim
 
-ARG TORCH_VERSION=2.12.1
+ARG TORCH_VERSION=2.1.2
 
 ENV PYTHONDONTWRITEBYTECODE=1 \
     PYTHONUNBUFFERED=1 \
@@ -17,6 +17,9 @@ COPY requirements.txt ./requirements.txt
 RUN pip install --upgrade pip \
     && pip install --no-cache-dir "torch==${TORCH_VERSION}" --index-url https://download.pytorch.org/whl/cpu \
     && pip install --no-cache-dir -r requirements.txt
+
+# Pre-download the embedding model so it's cached inside the Docker image layers
+RUN python -c "from sentence_transformers import SentenceTransformer; SentenceTransformer('BAAI/bge-small-en-v1.5')"
 
 COPY . .
 
