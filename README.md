@@ -26,7 +26,7 @@ Observe real-time reasoning checklist states and console log streams during proc
 
 ### 3. Structured Critiques Dashboard
 Tab through structured analysis results, including Grounded Page Citations, Thesis Viva questions, and Readiness scorecard summaries.
-![Structured Critique Results](docs/screenshots/Results.png)
+![Structured Critique Results](docs/screenshots/results.png)
 
 ### 4. Contextual Comparative Actions
 Compare methodology baselines and dataset metrics across multiple files.
