@@ -20,8 +20,8 @@ The entire user journey operates in a single, cohesive flow:
 Select, select multiple, or drop PDF manuscripts.
 ![Landing Homepage](docs/screenshots/Homepage.png)
 
-### 2. Live Agent Console Pipeline
-Observe real-time reasoning checklist states and console log streams during processing.
+### 2. Processing Pipeline Console
+Observe the status monitoring console and visual processing checkpoints as the document is ingested, chunked, and evaluated.
 ![Agent Reasoning Console](docs/screenshots/Processing.png)
 
 ### 3. Structured Critiques Dashboard
@@ -211,12 +211,12 @@ Instead of feeding the language model a massive context dump of the entire resea
 
 ---
 
-## ChromaDB Storage
+## ChromaDB Storage & Persistence
 
-ChromaDB acts as the application's retrieval memory:
-* **Persistence**: Vector embeddings are persisted locally on disk inside the SQLite-backed `./chroma` folder.
-* **Session boundaries**: Frontend active document tracking scopes analysis, comparison, search, and literature reviews strictly to the current browser tab session using list arrays of document IDs.
-* **Isolation**: Version 1.0 does not implement authenticated user-isolated collections at the database layer.
+ChromaDB acts as the application's persistent retrieval memory:
+* **Local Persistence**: Vector embeddings and parsed document metadata are stored persistently on disk inside the SQLite-backed `backend/chroma/` directory (which is ignored by Git to protect local data).
+* **Session-Isolated Workspace**: While the database is persistent, the frontend user interface isolates active documents to the current browser tab session. Clearing the session or reloading the page resets the active workspace array of document IDs, meaning previously uploaded papers remain indexed on the server but are not exposed in the current session list.
+* **Access Scope**: Version 1.0 does not implement authenticated user-isolated collections or database-level permissions.
 
 ---
 
@@ -281,6 +281,23 @@ The system uses a flexible provider abstraction to manage language model invocat
    npm run dev
    ```
 2. Open [http://localhost:3000](http://localhost:3000).
+
+---
+
+## Testing
+
+ResearchCompass includes a robust suite of 49 unit and integration tests covering config settings, document ingestion, paragraph chunking, vector search operations, and multi-document synthesis.
+
+To run the test suite locally:
+1. Navigate to the backend directory and activate the virtual environment:
+   ```bash
+   cd backend
+   source venv/bin/activate
+   ```
+2. Execute the tests:
+   ```bash
+   pytest
+   ```
 
 ---
 

@@ -55,6 +55,7 @@ dist/
 *.log
 logs/
 uvicorn*.pid
+backend/chroma/
 
 # VS Code
 .vscode/
