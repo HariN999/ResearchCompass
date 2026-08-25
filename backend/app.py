@@ -6,7 +6,6 @@ load_dotenv()
 import config
 
 import gradio as gr
-from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router
 import spaces
@@ -17,10 +16,36 @@ def dummy_gpu_check():
     pass
 
 
+# Create the Gradio interface
+with gr.Blocks(title="ResearchCompass API") as demo:
+    gr.Markdown("# 🧭 ResearchCompass API Server")
+    gr.Markdown("The backend server is running and ready to analyze papers.")
+    gr.Markdown("Send your API requests to `/api/v1/analyze`.")
+
+# Configure CORS on Gradio's internal FastAPI app
+demo.app.add_middleware(
+    CORSMiddleware,
+    allow_origins=config.settings.cors_allowed_origins,
+    allow_credentials=True,
+    allow_methods=["*"],
+    allow_headers=["*"],
+)
+
+# Include custom API router on Gradio's FastAPI app
+demo.app.include_router(router, prefix="/api/v1")
+
+# Reference for test clients and uvicorn running
+app = demo.app
 
 
-@asynccontextmanager
-async def lifespan(app: FastAPI):
+
+@demo.app.get("/status")
+async def status() -> dict[str, str]:
+    return {"status": "ResearchCompass is running", "version": "1.0.0"}
+
+
+@demo.app.on_event("startup")
+async def startup_event():
     # Pre-load embedding model during startup to prevent runtime request timeouts
     try:
         from dependencies import get_embedding_service
@@ -31,36 +56,7 @@ async def lifespan(app: FastAPI):
         logging.getLogger("uvicorn.error").error(
             "Failed to pre-load embedding model during startup: %s", str(e)
         )
-    yield
 
-
-app = FastAPI(title="ResearchCompass API", version="1.0.0", lifespan=lifespan)
-
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=config.settings.cors_allowed_origins,
-    allow_credentials=True,
-    allow_methods=["*"],
-    allow_headers=["*"],
-)
-
-app.include_router(router, prefix="/api/v1")
-
-
-@app.get("/status")
-async def root() -> dict[str, str]:
-    return {"status": "ResearchCompass is running", "version": "1.0.0"}
-
-
-with gr.Blocks(title="ResearchCompass API") as demo:
-    gr.Markdown("# 🧭 ResearchCompass API Server")
-    gr.Markdown("The backend server is running and ready to analyze papers.")
-    gr.Markdown("Send your API requests to `/api/analyze`.")
-
-app = gr.mount_gradio_app(app, demo, path="/")
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860)
-
-
+    demo.launch(server_name="0.0.0.0", server_port=7860)
