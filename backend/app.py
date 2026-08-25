@@ -5,6 +5,7 @@ load_dotenv()
 
 import config
 
+import gradio as gr
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router
@@ -38,6 +39,15 @@ app.add_middleware(
 app.include_router(router, prefix="/api")
 
 
-@app.get("/")
+@app.get("/status")
 async def root() -> dict[str, str]:
     return {"status": "ResearchCompass is running", "version": "1.0.0"}
+
+
+with gr.Blocks(title="ResearchCompass API") as demo:
+    gr.Markdown("# 🧭 ResearchCompass API Server")
+    gr.Markdown("The backend server is running and ready to analyze papers.")
+    gr.Markdown("Send your API requests to `/api/analyze`.")
+
+app = gr.mount_gradio_app(app, demo, path="/")
+
