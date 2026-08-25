@@ -21,8 +21,9 @@ class GroqProvider(LLMProvider):
                     {"role": "user", "content": user_prompt},
                 ],
                 "temperature": 0.3,
+                "max_tokens": 4096,
             }
-            if "llama" in self._model.lower():
+            if "llama" in self._model.lower() or "openai" in self._model.lower() or "gpt-oss" in self._model.lower():
                 kwargs["response_format"] = {"type": "json_object"}
 
             response = self._client.chat.completions.create(**kwargs)
