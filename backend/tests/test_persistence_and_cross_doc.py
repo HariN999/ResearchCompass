@@ -148,7 +148,7 @@ class PersistenceAndCrossDocTests(unittest.TestCase):
             self.vector_store_service.index_document(doc)
 
             # Test GET /api/documents
-            response_docs = self.client.get("/api/documents")
+            response_docs = self.client.get("/api/v1/documents")
             self.assertEqual(response_docs.status_code, 200)
             docs_list = response_docs.json()
             self.assertEqual(len(docs_list), 1)
@@ -162,7 +162,7 @@ class PersistenceAndCrossDocTests(unittest.TestCase):
                 "query": "endpoint tests",
                 "top_k": 2
             }
-            response_search = self.client.post("/api/search", json=search_payload)
+            response_search = self.client.post("/api/v1/search", json=search_payload)
             self.assertEqual(response_search.status_code, 200)
             search_results = response_search.json()["results"]
             self.assertEqual(len(search_results), 1)

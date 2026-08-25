@@ -6,7 +6,7 @@ export async function analyzeResearchPaper(file: File): Promise<AnalysisResult> 
   const formData = new FormData();
   formData.append("file", file);
 
-  const response = await fetch(`${API_BASE_URL}/api/analyze`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/analyze`, {
     method: "POST",
     body: formData,
   });
@@ -20,7 +20,7 @@ export async function analyzeResearchPaper(file: File): Promise<AnalysisResult> 
 }
 
 export async function getIndexedDocuments(): Promise<LibraryDocument[]> {
-  const response = await fetch(`${API_BASE_URL}/api/documents`);
+  const response = await fetch(`${API_BASE_URL}/api/v1/documents`);
 
   if (!response.ok) {
     const errorBody = await response.json().catch(() => null) as { detail?: string } | null;
@@ -31,7 +31,7 @@ export async function getIndexedDocuments(): Promise<LibraryDocument[]> {
 }
 
 export async function generateLiteratureReview(documentIds: string[]): Promise<LiteratureReviewResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/literature-review`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/literature-review`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
@@ -48,7 +48,7 @@ export async function generateLiteratureReview(documentIds: string[]): Promise<L
 }
 
 export async function compareResearchPapers(documentIds: string[]): Promise<ComparisonResponse> {
-  const response = await fetch(`${API_BASE_URL}/api/compare`, {
+  const response = await fetch(`${API_BASE_URL}/api/v1/compare`, {
     method: "POST",
     headers: {
       "Content-Type": "application/json",
