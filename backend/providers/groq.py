@@ -14,15 +14,18 @@ class GroqProvider(LLMProvider):
     def generate(self, system_prompt: str, user_prompt: str) -> str:
         logger.info("LLM request: sending generate request to Groq model %s (input size: %d chars)", self._model, len(user_prompt))
         try:
-            response = self._client.chat.completions.create(
-                model=self._model,
-                messages=[
+            kwargs = {
+                "model": self._model,
+                "messages": [
                     {"role": "system", "content": system_prompt},
                     {"role": "user", "content": user_prompt},
                 ],
-                response_format={"type": "json_object"},
-                temperature=0.3,
-            )
+                "temperature": 0.3,
+            }
+            if "llama" in self._model.lower():
+                kwargs["response_format"] = {"type": "json_object"}
+
+            response = self._client.chat.completions.create(**kwargs)
 
             content = response.choices[0].message.content
             if not content:

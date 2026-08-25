@@ -106,8 +106,16 @@ class LiteratureReviewService:
             raise AnalysisError("Failed to generate literature review critique.") from exc
 
         # 4. Parse LLM JSON Response
+        cleaned_text = response_text.strip()
+        if cleaned_text.startswith("```"):
+            first_newline = cleaned_text.find("\n")
+            if first_newline != -1:
+                cleaned_text = cleaned_text[first_newline:].strip()
+            if cleaned_text.endswith("```"):
+                cleaned_text = cleaned_text[:-3].strip()
+
         try:
-            data = json.loads(response_text)
+            data = json.loads(cleaned_text)
             return LiteratureReviewResponse(**data)
         except (json.JSONDecodeError, ValidationError) as exc:
             logger.error("LLM returned an invalid response structure for literature review: %s", str(exc), exc_info=True)

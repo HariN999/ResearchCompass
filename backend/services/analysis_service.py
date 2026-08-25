@@ -73,8 +73,16 @@ class AnalysisService:
             logger.error("LLM generation failed: %s", str(exc), exc_info=True)
             raise AnalysisError(f"Failed to analyze research paper: {exc}") from exc
 
+        cleaned_text = response_text.strip()
+        if cleaned_text.startswith("```"):
+            first_newline = cleaned_text.find("\n")
+            if first_newline != -1:
+                cleaned_text = cleaned_text[first_newline:].strip()
+            if cleaned_text.endswith("```"):
+                cleaned_text = cleaned_text[:-3].strip()
+
         try:
-            parsed = json.loads(response_text)
+            parsed = json.loads(cleaned_text)
         except json.JSONDecodeError as exc:
             logger.error("LLM response is not valid JSON. Response received: %s", response_text, exc_info=True)
             raise InvalidLLMResponseError("Failed to analyze research paper: LLM response was not valid JSON.") from exc
