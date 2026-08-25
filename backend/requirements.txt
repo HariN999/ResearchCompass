@@ -9,4 +9,4 @@ python-dotenv
 sentence-transformers
 chromadb
 gradio
-huggingface-hub<=0.24.0
+huggingface-hub>=0.25.1,<0.26.0
