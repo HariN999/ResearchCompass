@@ -26,6 +26,19 @@ class ProviderFactoryTests(unittest.TestCase):
 
         self.assertIsInstance(provider, GroqProvider)
 
+    def test_fallback_provider_is_created_when_openrouter_api_key_is_set(self) -> None:
+        environment = {
+            "GROQ_API_KEY": "test-key",
+            "OPENROUTER_API_KEY": "openrouter-key",
+        }
+        with patch.dict("os.environ", environment, clear=True):
+            config.settings.__init__()
+            config.settings.validate()
+            provider = create_llm_provider()
+
+        from providers.fallback import FallbackLLMProvider
+        self.assertIsInstance(provider, FallbackLLMProvider)
+
     def test_openrouter_can_be_selected(self) -> None:
         environment = {
             "LLM_PROVIDER": "openrouter",

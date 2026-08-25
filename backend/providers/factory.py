@@ -10,15 +10,29 @@ from providers.openrouter import OpenRouterProvider
 logger = logging.getLogger(__name__)
 
 
+from providers.fallback import FallbackLLMProvider
+
+
 def create_llm_provider() -> LLMProvider:
     provider_name = settings.llm_provider
     logger.info("Initializing LLM provider: %s", provider_name)
 
     if provider_name == "groq":
-        return GroqProvider(
+        primary = GroqProvider(
             api_key=settings.groq_api_key,
             model=settings.groq_model,
         )
+        if settings.openrouter_api_key:
+            logger.info("Configuring OpenRouter as fallback LLM provider.")
+            fallback = OpenRouterProvider(
+                api_key=settings.openrouter_api_key,
+                model=settings.openrouter_model,
+                timeout_seconds=settings.llm_timeout_seconds,
+                site_url=settings.openrouter_site_url,
+                app_name=settings.openrouter_app_name,
+            )
+            return FallbackLLMProvider(primary, fallback)
+        return primary
 
     if provider_name == "openrouter":
         return OpenRouterProvider(
