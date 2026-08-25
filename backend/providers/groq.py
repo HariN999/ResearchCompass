@@ -12,6 +12,19 @@ class GroqProvider(LLMProvider):
         self._model = model
 
     def generate(self, system_prompt: str, user_prompt: str) -> str:
+        # Truncate user prompt to stay under Groq's 8,000 TPM limit (~22,000 characters)
+        MAX_PROMPT_CHARS = 22000
+        if len(user_prompt) > MAX_PROMPT_CHARS:
+            logger.warning(
+                "LLM input size (%d chars) exceeds Groq rate limits. Truncating to %d chars.",
+                len(user_prompt),
+                MAX_PROMPT_CHARS
+            )
+            user_prompt = user_prompt[:MAX_PROMPT_CHARS]
+            last_space = user_prompt.rfind(" ")
+            if last_space != -1:
+                user_prompt = user_prompt[:last_space]
+
         logger.info("LLM request: sending generate request to Groq model %s (input size: %d chars)", self._model, len(user_prompt))
         try:
             kwargs = {
