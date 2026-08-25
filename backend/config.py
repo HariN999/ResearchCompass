@@ -17,7 +17,7 @@ class Settings:
 
         # Provider configurations
         self.groq_api_key = os.getenv("GROQ_API_KEY", "").strip()
-        self.groq_model = os.getenv("GROQ_MODEL", "qwen/qwen3.6-27b").strip()
+        self.groq_model = os.getenv("GROQ_MODEL", "openai/gpt-oss-20b").strip()
 
         self.openrouter_api_key = os.getenv("OPENROUTER_API_KEY", "").strip()
         self.openrouter_model = os.getenv("OPENROUTER_MODEL", "meta-llama/llama-3.3-70b-instruct").strip()
