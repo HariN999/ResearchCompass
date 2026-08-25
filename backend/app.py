@@ -9,14 +9,13 @@ import gradio as gr
 from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router
+import spaces
 
-try:
-    import spaces
-    @spaces.GPU
-    def dummy_gpu_check():
-        pass
-except ImportError:
+
+@spaces.GPU
+def dummy_gpu_check():
     pass
+
 
 
 
