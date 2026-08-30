@@ -74,8 +74,8 @@ with gr.Blocks(title="ResearchCompass API") as demo:
     dummy_btn = gr.Button("GPU Trigger", visible=False)
     dummy_btn.click(fn=dummy_gpu_check, inputs=[], outputs=[])
 
-# Mount our custom API app onto Gradio's internal FastAPI app at /v1 path
-demo.app.mount("/v1", api_app)
+# Mount our custom API app onto Gradio's internal FastAPI app at /api/v1 path
+demo.app.mount("/api/v1", api_app)
 
 # Export the app for test clients
 app = demo.app
