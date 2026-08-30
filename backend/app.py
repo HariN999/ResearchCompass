@@ -29,11 +29,11 @@ def dummy_gpu_check():
     pass
 
 
-# Initialize clean FastAPI sub-application for custom API endpoints
-api_app = FastAPI(title="ResearchCompass API")
+# Initialize our custom FastAPI application
+app = FastAPI(title="ResearchCompass API")
 
-# Configure CORS on our custom API app
-api_app.add_middleware(
+# Configure CORS on our custom FastAPI app
+app.add_middleware(
     CORSMiddleware,
     allow_origins=config.settings.cors_allowed_origins,
     allow_credentials=True,
@@ -41,16 +41,17 @@ api_app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include custom API router on our API sub-app
-api_app.include_router(router)
+# Include custom API router on our FastAPI app under /api/v1
+app.include_router(router, prefix="/api/v1")
 
 
-@api_app.get("/status")
+@app.get("/status")
+@app.get("/api/v1/status")
 async def status() -> dict[str, str]:
     return {"status": "ResearchCompass is running", "version": "1.0.0"}
 
 
-@api_app.on_event("startup")
+@app.on_event("startup")
 async def startup_event():
     # Pre-load embedding model during startup to prevent runtime request timeouts
     try:
@@ -68,25 +69,20 @@ async def startup_event():
 with gr.Blocks(title="ResearchCompass API") as demo:
     gr.Markdown("# 🧭 ResearchCompass API Server")
     gr.Markdown("The backend server is running and ready to analyze papers.")
-    gr.Markdown("Send your API requests to `/v1/analyze`.")
+    gr.Markdown("Send your API requests to `/api/v1/analyze`.")
     
     # Hidden components to satisfy Hugging Face ZeroGPU @spaces.GPU detection
     dummy_btn = gr.Button("GPU Trigger", visible=False)
     dummy_btn.click(fn=dummy_gpu_check, inputs=[], outputs=[])
 
-# Mount our custom API app onto Gradio's internal FastAPI app at /api/v1 path
-demo.app.mount("/api/v1", api_app)
-
-# Force our custom API mount to the front of FastAPI's routing table so it takes precedence over Gradio/SvelteKit
-for i, r in enumerate(demo.app.router.routes):
-    if hasattr(r, "path") and r.path == "/api/v1":
-        route = demo.app.router.routes.pop(i)
-        demo.app.router.routes.insert(0, route)
-        break
-
-# Export the app for test clients
-app = demo.app
+# Mount Gradio app inside our FastAPI app at root path
+app = gr.mount_gradio_app(app, demo, path="/")
 
 
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    # Launch Gradio on port 7861 to satisfy Hugging Face ZeroGPU supervisor hooks
+    demo.launch(server_name="127.0.0.1", server_port=7861, prevent_thread_lock=True)
+    
+    # Start our main FastAPI app on port 7860
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
