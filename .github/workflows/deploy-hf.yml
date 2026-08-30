@@ -42,4 +42,4 @@ jobs:
           git commit -m "deploy: sync backend from github action"
           # Push to HF Space using the secret token
           git push -f https://HariN999:$HF_TOKEN@huggingface.co/spaces/HariN999/ResearchCompass main
-# Force trigger deployment run 5
+# Force trigger deployment run 7
