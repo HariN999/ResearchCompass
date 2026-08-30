@@ -72,15 +72,21 @@ async def startup_event():
             "Failed to pre-load embedding model during startup: %s", str(e)
         )
 
-# Move all routes starting with /api/v1 to the front of the routing table so they take precedence over Gradio/SvelteKit
-api_routes = []
-other_routes = []
-for r in demo.app.router.routes:
-    if hasattr(r, "path") and r.path.startswith("/api/v1"):
-        api_routes.append(r)
-    else:
-        other_routes.append(r)
-demo.app.router.routes = api_routes + other_routes
+    # Move all routes starting with /api/v1 to the front of the routing table so they take precedence over SvelteKit wildcards
+    api_routes = []
+    other_routes = []
+    for r in demo.app.router.routes:
+        if hasattr(r, "path") and r.path.startswith("/api/v1"):
+            api_routes.append(r)
+        else:
+            other_routes.append(r)
+    demo.app.router.routes = api_routes + other_routes
+    
+    import logging
+    logging.getLogger("uvicorn.error").info(
+        "Successfully prioritized /api/v1 routes in the routing table (total routes: %d)", 
+        len(demo.app.router.routes)
+    )
 
 # Export the app for test clients
 app = demo.app
