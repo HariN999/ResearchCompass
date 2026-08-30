@@ -27,7 +27,7 @@ class MultiPDFUploadTests(unittest.TestCase):
         files = [
             ("files", ("doc1.pdf", pdf_bytes, "application/pdf")),
         ]
-        response = self.client.post("/api/v1/ingest", files=files)
+        response = self.client.post("/gradio_api/v1/ingest", files=files)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -45,7 +45,7 @@ class MultiPDFUploadTests(unittest.TestCase):
             ("files", ("doc1.pdf", pdf_bytes_1, "application/pdf")),
             ("files", ("doc2.pdf", pdf_bytes_2, "application/pdf")),
         ]
-        response = self.client.post("/api/v1/ingest", files=files)
+        response = self.client.post("/gradio_api/v1/ingest", files=files)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -65,7 +65,7 @@ class MultiPDFUploadTests(unittest.TestCase):
             ("files", ("valid.pdf", pdf_bytes_valid, "application/pdf")),
             ("files", ("invalid.pdf", pdf_bytes_invalid, "application/pdf")),
         ]
-        response = self.client.post("/api/v1/ingest", files=files)
+        response = self.client.post("/gradio_api/v1/ingest", files=files)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
@@ -93,7 +93,7 @@ class MultiPDFUploadTests(unittest.TestCase):
             ("files", ("doc.pdf", pdf_bytes_1, "application/pdf")),
             ("files", ("doc.pdf", pdf_bytes_2, "application/pdf")),
         ]
-        response = self.client.post("/api/v1/ingest", files=files)
+        response = self.client.post("/gradio_api/v1/ingest", files=files)
 
         self.assertEqual(response.status_code, 200)
         data = response.json()
