@@ -6,8 +6,10 @@ load_dotenv()
 import config
 
 import gradio as gr
+from fastapi import FastAPI
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router
+
 try:
     import spaces
 except ImportError:
@@ -27,18 +29,11 @@ def dummy_gpu_check():
     pass
 
 
-# Create the Gradio interface
-with gr.Blocks(title="ResearchCompass API") as demo:
-    gr.Markdown("# 🧭 ResearchCompass API Server")
-    gr.Markdown("The backend server is running and ready to analyze papers.")
-    gr.Markdown("Send your API requests to `/v1/analyze`.")
-    
-    # Hidden components to satisfy Hugging Face ZeroGPU @spaces.GPU detection
-    dummy_btn = gr.Button("GPU Trigger", visible=False)
-    dummy_btn.click(fn=dummy_gpu_check, inputs=[], outputs=[])
+# Initialize clean FastAPI application
+app = FastAPI(title="ResearchCompass API")
 
-# Configure CORS on Gradio's internal FastAPI app
-demo.app.add_middleware(
+# Configure CORS on our custom FastAPI app
+app.add_middleware(
     CORSMiddleware,
     allow_origins=config.settings.cors_allowed_origins,
     allow_credentials=True,
@@ -46,20 +41,16 @@ demo.app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include custom API router on Gradio's FastAPI app
-demo.app.include_router(router, prefix="/v1")
-
-# Reference for test clients and uvicorn running
-app = demo.app
+# Include custom API router on FastAPI app
+app.include_router(router, prefix="/v1")
 
 
-
-@demo.app.get("/status")
+@app.get("/status")
 async def status() -> dict[str, str]:
     return {"status": "ResearchCompass is running", "version": "1.0.0"}
 
 
-@demo.app.on_event("startup")
+@app.on_event("startup")
 async def startup_event():
     # Pre-load embedding model during startup to prevent runtime request timeouts
     try:
@@ -73,5 +64,20 @@ async def startup_event():
         )
 
 
+# Create the Gradio interface
+with gr.Blocks(title="ResearchCompass API") as demo:
+    gr.Markdown("# 🧭 ResearchCompass API Server")
+    gr.Markdown("The backend server is running and ready to analyze papers.")
+    gr.Markdown("Send your API requests to `/v1/analyze`.")
+    
+    # Hidden components to satisfy Hugging Face ZeroGPU @spaces.GPU detection
+    dummy_btn = gr.Button("GPU Trigger", visible=False)
+    dummy_btn.click(fn=dummy_gpu_check, inputs=[], outputs=[])
+
+# Mount Gradio app inside our FastAPI app at root path
+app = gr.mount_gradio_app(app, demo, path="/")
+
+
 if __name__ == "__main__":
-    demo.launch(server_name="0.0.0.0", server_port=7860)
+    import uvicorn
+    uvicorn.run(app, host="0.0.0.0", port=7860)
