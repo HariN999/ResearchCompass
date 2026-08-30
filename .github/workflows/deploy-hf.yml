@@ -29,6 +29,10 @@ jobs:
         env:
           HF_TOKEN: ${{ secrets.HF_TOKEN }}
         run: |
+          if [ -z "$HF_TOKEN" ]; then
+            echo "::error::HF_TOKEN secret is empty or missing! Please make sure it is added under Repository Secrets (not Environment Secrets) in your GitHub repo settings."
+            exit 1
+          fi
           cd ../hf_deploy
           git init
           git config user.name "github-actions[bot]"
