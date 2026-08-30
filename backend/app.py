@@ -29,11 +29,11 @@ def dummy_gpu_check():
     pass
 
 
-# Initialize clean FastAPI application
-app = FastAPI(title="ResearchCompass API")
+# Initialize clean FastAPI sub-application for custom API endpoints
+api_app = FastAPI(title="ResearchCompass API")
 
-# Configure CORS on our custom FastAPI app
-app.add_middleware(
+# Configure CORS on our custom API app
+api_app.add_middleware(
     CORSMiddleware,
     allow_origins=config.settings.cors_allowed_origins,
     allow_credentials=True,
@@ -41,16 +41,16 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# Include custom API router on FastAPI app
-app.include_router(router, prefix="/v1")
+# Include custom API router on our API sub-app
+api_app.include_router(router)
 
 
-@app.get("/status")
+@api_app.get("/status")
 async def status() -> dict[str, str]:
     return {"status": "ResearchCompass is running", "version": "1.0.0"}
 
 
-@app.on_event("startup")
+@api_app.on_event("startup")
 async def startup_event():
     # Pre-load embedding model during startup to prevent runtime request timeouts
     try:
@@ -74,10 +74,12 @@ with gr.Blocks(title="ResearchCompass API") as demo:
     dummy_btn = gr.Button("GPU Trigger", visible=False)
     dummy_btn.click(fn=dummy_gpu_check, inputs=[], outputs=[])
 
-# Mount Gradio app inside our FastAPI app at root path
-app = gr.mount_gradio_app(app, demo, path="/")
+# Mount our custom API app onto Gradio's internal FastAPI app at /v1 path
+demo.app.mount("/v1", api_app)
+
+# Export the app for test clients
+app = demo.app
 
 
 if __name__ == "__main__":
-    import uvicorn
-    uvicorn.run(app, host="0.0.0.0", port=7860)
+    demo.launch(server_name="0.0.0.0", server_port=7860)

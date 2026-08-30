@@ -5,7 +5,7 @@ from fastapi.testclient import TestClient
 import os
 import shutil
 
-from app import app
+from app import app, api_app
 from dependencies import get_vector_store_service, get_embedding_service, get_retrieval_service
 from models import DocumentIngestionResult, DocumentMetadata, DocumentPage, DocumentChunk, RetrievedChunk
 from services.vector_store_service import VectorStoreService
@@ -134,8 +134,8 @@ class PersistenceAndCrossDocTests(unittest.TestCase):
 
     def test_api_search_and_documents(self) -> None:
         # Setup overrides for dependencies so FastAPIs TestClient uses our temp Chroma instance
-        app.dependency_overrides[get_vector_store_service] = lambda: self.vector_store_service
-        app.dependency_overrides[get_retrieval_service] = lambda: self.retrieval_service
+        api_app.dependency_overrides[get_vector_store_service] = lambda: self.vector_store_service
+        api_app.dependency_overrides[get_retrieval_service] = lambda: self.retrieval_service
         
         try:
             # Index document
@@ -171,7 +171,7 @@ class PersistenceAndCrossDocTests(unittest.TestCase):
             self.assertIn("FastAPI", search_results[0]["text"])
         finally:
             # Clear FastAPI overrides to avoid affecting other tests
-            app.dependency_overrides.clear()
+            api_app.dependency_overrides.clear()
 
 
 if __name__ == "__main__":
