@@ -31,7 +31,7 @@ def dummy_gpu_check():
 with gr.Blocks(title="ResearchCompass API") as demo:
     gr.Markdown("# 🧭 ResearchCompass API Server")
     gr.Markdown("The backend server is running and ready to analyze papers.")
-    gr.Markdown("Send your API requests to `/api/v1/analyze`.")
+    gr.Markdown("Send your API requests to `/v1/analyze`.")
     
     # Hidden components to satisfy Hugging Face ZeroGPU @spaces.GPU detection
     dummy_btn = gr.Button("GPU Trigger", visible=False)
@@ -47,7 +47,7 @@ demo.app.add_middleware(
 )
 
 # Include custom API router on Gradio's FastAPI app
-demo.app.include_router(router, prefix="/api/v1")
+demo.app.include_router(router, prefix="/v1")
 
 # Reference for test clients and uvicorn running
 app = demo.app
