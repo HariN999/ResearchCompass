@@ -79,7 +79,7 @@ demo.app.mount("/api/v1", api_app)
 
 # Force our custom API mount to the front of FastAPI's routing table so it takes precedence over Gradio/SvelteKit
 for i, r in enumerate(demo.app.router.routes):
-    if r.path == "/api/v1":
+    if hasattr(r, "path") and r.path == "/api/v1":
         route = demo.app.router.routes.pop(i)
         demo.app.router.routes.insert(0, route)
         break
