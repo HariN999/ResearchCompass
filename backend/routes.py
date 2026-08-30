@@ -293,11 +293,11 @@ async def semantic_search(
         raise HTTPException(status_code=500, detail="An unexpected internal server error occurred.") from exc
 
 
-@router.get("/documents", response_model=list[LibraryDocument])
+@router.post("/documents", response_model=list[LibraryDocument])
 async def list_documents(
     retrieval_service: Annotated[RetrievalService, Depends(get_retrieval_service)],
 ) -> list[LibraryDocument]:
-    logger.info("API request received: GET /api/documents")
+    logger.info("API request received: POST /api/documents")
     try:
         docs = retrieval_service.list_documents()
         return [LibraryDocument(**doc) for doc in docs]
