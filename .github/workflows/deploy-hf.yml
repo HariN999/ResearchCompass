@@ -35,6 +35,7 @@ jobs:
           fi
           cd ../hf_deploy
           git init
+          git checkout -b main
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add .
