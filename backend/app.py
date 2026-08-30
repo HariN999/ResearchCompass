@@ -8,7 +8,18 @@ import config
 import gradio as gr
 from fastapi.middleware.cors import CORSMiddleware
 from routes import router
-import spaces
+try:
+    import spaces
+except ImportError:
+    class MockSpaces:
+        @staticmethod
+        def GPU(func_or_duration=None, *args, **kwargs):
+            if callable(func_or_duration):
+                return func_or_duration
+            def decorator(func):
+                return func
+            return decorator
+    spaces = MockSpaces()
 
 
 @spaces.GPU
@@ -21,6 +32,10 @@ with gr.Blocks(title="ResearchCompass API") as demo:
     gr.Markdown("# 🧭 ResearchCompass API Server")
     gr.Markdown("The backend server is running and ready to analyze papers.")
     gr.Markdown("Send your API requests to `/api/v1/analyze`.")
+    
+    # Hidden components to satisfy Hugging Face ZeroGPU @spaces.GPU detection
+    dummy_btn = gr.Button("GPU Trigger", visible=False)
+    dummy_btn.click(fn=dummy_gpu_check, inputs=[], outputs=[])
 
 # Configure CORS on Gradio's internal FastAPI app
 demo.app.add_middleware(
