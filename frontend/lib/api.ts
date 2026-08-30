@@ -1,5 +1,6 @@
 import type { AnalysisResult, LibraryDocument, LiteratureReviewResponse, ComparisonResponse } from "../types/analysis";
 
+// Trigger Vercel rebuild for updated Hugging Face API URL
 const API_BASE_URL = process.env.NEXT_PUBLIC_API_URL?.replace(/\/$/, "") ?? "http://localhost:8000";
 
 export async function analyzeResearchPaper(file: File): Promise<AnalysisResult> {
