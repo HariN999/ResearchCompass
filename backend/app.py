@@ -74,8 +74,15 @@ with gr.Blocks(title="ResearchCompass API") as demo:
     dummy_btn = gr.Button("GPU Trigger", visible=False)
     dummy_btn.click(fn=dummy_gpu_check, inputs=[], outputs=[])
 
-# Mount our custom API app onto Gradio's internal FastAPI app at /v1 path
-demo.app.mount("/v1", api_app)
+# Mount our custom API app onto Gradio's internal FastAPI app at /api/v1 path
+demo.app.mount("/api/v1", api_app)
+
+# Force our custom API mount to the front of FastAPI's routing table so it takes precedence over Gradio/SvelteKit
+for i, r in enumerate(demo.app.router.routes):
+    if r.path == "/api/v1":
+        route = demo.app.router.routes.pop(i)
+        demo.app.router.routes.insert(0, route)
+        break
 
 # Export the app for test clients
 app = demo.app
