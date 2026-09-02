@@ -72,3 +72,4 @@ backend/chroma/
 *.bak
 *.swp
 *.swo
+scratch/

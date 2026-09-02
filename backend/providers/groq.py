@@ -26,6 +26,7 @@ class GroqProvider(LLMProvider):
                 user_prompt = user_prompt[:last_space]
 
         logger.info("LLM request: sending generate request to Groq model %s (input size: %d chars)", self._model, len(user_prompt))
+        FALLBACK_MODEL = "llama-3.1-8b-instant"
         try:
             kwargs = {
                 "model": self._model,
@@ -48,8 +49,25 @@ class GroqProvider(LLMProvider):
             logger.info("LLM response: successfully received completion from Groq model %s", self._model)
             return content
         except Exception as exc:
-            if isinstance(exc, LLMProviderError):
-                raise
+            if isinstance(exc, LLMProviderError) and "empty response" in str(exc):
+                pass
+            elif self._model != FALLBACK_MODEL:
+                logger.warning(
+                    "Groq primary model %s failed (%s). Retrying with high-throughput fallback model %s...",
+                    self._model,
+                    str(exc),
+                    FALLBACK_MODEL
+                )
+                try:
+                    kwargs["model"] = FALLBACK_MODEL
+                    response = self._client.chat.completions.create(**kwargs)
+                    content = response.choices[0].message.content
+                    if content:
+                        logger.info("LLM response: successfully received completion from fallback Groq model %s", FALLBACK_MODEL)
+                        return content
+                except Exception as fallback_exc:
+                    logger.error("Groq fallback model %s also failed: %s", FALLBACK_MODEL, str(fallback_exc), exc_info=True)
+
             logger.error("Groq API request failed for model %s: %s", self._model, str(exc), exc_info=True)
-            raise LLMProviderError("Groq API execution failed.") from exc
+            raise LLMProviderError(f"Groq API execution failed: {str(exc)}") from exc
 
