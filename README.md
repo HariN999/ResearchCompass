@@ -60,7 +60,7 @@ Review a cohesive, theme-based related work article synthesized on demand.
 | **AI Processing** | Groq Cloud (Default Provider) | LLM reasoning engine (defaults to `llama-3.3-70b-versatile` on Groq) |
 | **Vector Database** | ChromaDB | Local vector indexing and persistent vector query matching |
 | **Embeddings** | SentenceTransformers (`BAAI/bge-small-en-v1.5`) | Generates 384-dimensional dense vectors for chunks and queries |
-| **Deployment** | Docker, Docker Compose | Containerized execution environment |
+| **Deployment** | Vercel (Frontend), Hugging Face Spaces ZeroGPU (Backend), Docker | Cloud-hosted and containerized environments |
 
 ---
 
@@ -129,8 +129,10 @@ Review a cohesive, theme-based related work article synthesized on demand.
 
 ## API Endpoints
 
-### 1. `POST /api/analyze`
-* **Purpose**: Ingests an uploaded PDF, parses text, generates embeddings, indexes it in Chroma, runs section-aware targeted RAG retrieval, and computes a detailed AI critique.
+All backend endpoints are served under the `/api/v1` prefix:
+
+### 1. `POST /api/v1/analyze`
+* **Purpose**: Ingests an uploaded PDF, extracts text, generates embeddings, indexes vectors in ChromaDB, runs section-aware targeted RAG retrieval, and computes a detailed AI critique.
 * **Request**: `multipart/form-data` containing a single `file: UploadFile`.
 * **Response**: A JSON object matching the `AnalysisResponse` schema:
   ```json
@@ -155,7 +157,7 @@ Review a cohesive, theme-based related work article synthesized on demand.
   }
   ```
 
-### 2. `POST /api/compare`
+### 2. `POST /api/v1/compare`
 * **Purpose**: Generates a comparative analysis evaluating overlaps, methodology constraints, and datasets across multiple documents.
 * **Request**: `application/json`
   ```json
@@ -163,7 +165,7 @@ Review a cohesive, theme-based related work article synthesized on demand.
   ```
 * **Response**: `ComparisonResponse` JSON object containing comparative metrics.
 
-### 3. `POST /api/literature-review`
+### 3. `POST /api/v1/literature-review`
 * **Purpose**: Synthesizes thematic developments, methodology trends, open limits, and compiles a formal "Related Work" academic literature review section.
 * **Request**: `application/json`
   ```json
@@ -171,7 +173,7 @@ Review a cohesive, theme-based related work article synthesized on demand.
   ```
 * **Response**: `LiteratureReviewResponse` JSON object containing structured thematic summaries and a complete `generated_literature_review` narrative.
 
-### 4. `POST /api/search`
+### 4. `POST /api/v1/search`
 * **Purpose**: Vector similarity search over indexed chunks, scoped strictly to active documents.
 * **Request**: `application/json`
   ```json
@@ -179,9 +181,16 @@ Review a cohesive, theme-based related work article synthesized on demand.
   ```
 * **Response**: `SemanticSearchResponse` array containing matching retrieved chunk objects.
 
-### 5. `GET /api/documents`
-* **Purpose**: Returns metadata for all indexed vectors currently retained in ChromaDB.
-* **Response**: `list[LibraryDocument]` JSON array. (Hidden in UI to protect multi-user session privacy, but functional).
+### 5. `POST /api/v1/documents`
+* **Purpose**: Returns metadata for all indexed documents retained in ChromaDB.
+* **Response**: `list[LibraryDocument]` JSON array.
+
+### 6. `GET /api/v1/status`
+* **Purpose**: Health check endpoint returning backend status and version info.
+* **Response**:
+  ```json
+  { "status": "ResearchCompass is running", "version": "1.0.0" }
+  ```
 
 ---
 
@@ -223,9 +232,9 @@ ChromaDB acts as the application's persistent retrieval memory:
 ## Provider Support
 
 The system uses a flexible provider abstraction to manage language model invocations:
-* **Default Setup**: Groq is the default provider due to its low latency and native JSON completion support.
-* **Abstraction Support**: Integrations for OpenRouter and local Ollama deployments are fully implemented, allowing users to swap providers via environment variable configurations.
-* **Planned Configuration**: Automatic rate-limit provider fallback routing is planned for a future release.
+* **Default Setup**: Groq is the default provider due to its ultra-low latency and native JSON completion support (defaults to `llama-3.3-70b-versatile`).
+* **Multi-Tier Fallback Resilience**: Implements automatic in-provider fallback (Groq 70B falls back to `llama-3.1-8b-instant` on rate limits/TPM exhaustion) and cross-provider fallback (cascades to OpenRouter if configured) to guarantee uninterrupted manuscript analysis.
+* **Alternative Providers**: Integrations for OpenRouter and local Ollama deployments are fully supported via environment variables.
 
 ---
 
@@ -235,7 +244,6 @@ The system uses a flexible provider abstraction to manage language model invocat
 * **No Database Authentication**: There are no logins or authenticated user accounts; document boundaries are logically constrained at the API query level.
 * **No Automatic Pruning**: Old session collections are not automatically deleted.
 * **No Streaming Responses**: Client requests wait for the full Pydantic JSON structure to complete before returning results.
-* **Automatic Fallback Not Yet Implemented**: The LLM provider abstraction requires manually restarting the backend configuration if changing hosts.
 
 ---
 
@@ -286,7 +294,7 @@ The system uses a flexible provider abstraction to manage language model invocat
 
 ## Testing
 
-ResearchCompass includes a robust suite of 49 unit and integration tests covering config settings, document ingestion, paragraph chunking, vector search operations, and multi-document synthesis.
+ResearchCompass includes a robust suite of 53 unit and integration tests covering config settings, document ingestion, paragraph chunking, vector search operations, and multi-document synthesis.
 
 To run the test suite locally:
 1. Navigate to the backend directory and activate the virtual environment:
@@ -313,6 +321,13 @@ Docker configurations are fully implemented for both backend and frontend layers
    docker compose up --build
    ```
 3. Access the frontend app at [http://localhost:3000](http://localhost:3000) and backend at [http://localhost:8000](http://localhost:8000).
+
+---
+
+## Cloud Deployment
+
+* **Frontend (Vercel)**: Next.js 15 application deployed on Vercel. Set `NEXT_PUBLIC_API_URL` to your backend URL (e.g. `https://harin999-researchcompass.hf.space`).
+* **Backend (Hugging Face Spaces)**: FastAPI application deployed on Hugging Face Spaces with ZeroGPU (`zero-a10g`). CI/CD is automated via GitHub Actions (`.github/workflows/deploy-hf.yml`). Configure `GROQ_API_KEY` (and optional `OPENROUTER_API_KEY`) under Space Secrets.
 
 ---
 
